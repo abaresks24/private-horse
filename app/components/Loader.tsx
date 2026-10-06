@@ -31,11 +31,11 @@ export function LoaderOverlay({ hidden, label = "Working" }: { hidden: boolean; 
       <div className="stage">
         <div className="horsewrap">
           {noVideo ? (
-            <HorseMark size={180} src="/logo-white.png" />
+            <HorseMark size={180} src="/logo.png" />
           ) : (
             <video autoPlay loop muted playsInline onError={() => setNoVideo(true)}>
               <source src="/loader-transparent.webm" type="video/webm" />
-              <source src="/loader-black.mp4" type="video/mp4" />
+              <source src="/loader.mp4" type="video/mp4" />
             </video>
           )}
         </div>
