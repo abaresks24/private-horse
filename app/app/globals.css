@@ -121,6 +121,20 @@ footer.site { padding: 36px 28px 80px; color: var(--taupe); font-family: var(--m
 .loader .barline::after { content: ""; position: absolute; inset: 0; width: 38%; background: #fff; animation: canter 1.05s cubic-bezier(.45,.05,.3,1) infinite; }
 @keyframes canter { 0% { transform: translateX(-120%); } 100% { transform: translateX(330%); } }
 
+/* ---- docs ---- */
+.doc-layout { display: grid; grid-template-columns: 200px 1fr; gap: 56px; align-items: start; }
+@media (max-width: 860px) { .doc-layout { grid-template-columns: 1fr; gap: 28px; } }
+.toc { position: sticky; top: 100px; }
+.toc nav { display: flex; flex-direction: column; gap: 10px; font-family: var(--mono); font-size: 13px; }
+.toc nav a { color: var(--ink-soft); }
+.doc { max-width: 70ch; }
+.doc h2 { font-family: var(--display); font-weight: 700; font-size: 1.7rem; letter-spacing: -0.01em; margin: 48px 0 12px; padding-top: 16px; border-top: 1px solid var(--line); }
+.doc h3 { font-family: var(--display); font-weight: 600; font-size: 1.15rem; margin: 26px 0 6px; }
+.doc p { color: var(--ink-soft); margin: 12px 0; }
+.doc ul, .doc ol { color: var(--ink-soft); padding-left: 22px; }
+.doc li { margin: 9px 0; }
+.doc code { font-family: var(--mono); font-size: 0.86em; background: rgba(19,17,16,0.07); padding: 1px 5px; border-radius: 2px; }
+
 /* ---- app panels ---- */
 .appgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 @media (max-width: 860px) { .appgrid { grid-template-columns: 1fr; } }

@@ -31,8 +31,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <span>Private&nbsp;Horse</span>
               </a>
               <nav>
-                <a href="/#how">How it works</a>
-                <a href="/#app">Use the pool</a>
+                <a href="/">Home</a>
+                <a href="/app">App</a>
+                <a href="/docs">Docs</a>
                 <a href={EXPLORER} target="_blank" rel="noreferrer" className="nav-devnet">Devnet&nbsp;↗</a>
               </nav>
             </header>
