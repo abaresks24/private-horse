@@ -23,7 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Loader minMs={1800}>
           <header className="site">
             <a href="/" className="brand">
-              <HorseMark size={28} color="#8a3a2a" />
+              <HorseMark size={30} />
               <span>Private&nbsp;Horse</span>
             </a>
             <nav>

@@ -179,8 +179,11 @@ const Stat = ({ k, v }: { k: string; v: string }) => (
 
 function HeroHorse() {
   const [noVideo, setNoVideo] = useState(false);
-  if (noVideo) return <HorseMark size={120} color="#8a3a2a" />;
+  if (noVideo) return <HorseMark size={140} />;
   return (
-    <video src="/horse-run.mp4" poster="/horse-poster.jpg" autoPlay loop muted playsInline onError={() => setNoVideo(true)} />
+    <video autoPlay loop muted playsInline onError={() => setNoVideo(true)}>
+      <source src="/loader-transparent.webm" type="video/webm" />
+      <source src="/loader-black.mp4" type="video/mp4" />
+    </video>
   );
 }
