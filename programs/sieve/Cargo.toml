@@ -1,0 +1,27 @@
+[package]
+name = "sieve"
+version = "0.1.0"
+description = "Sieve — provenance-proven, decentralized, auditable privacy pool on Solana"
+edition = "2021"
+# Pin MSRV to the Anchor 0.30.1 platform-tools toolchain so the MSRV-aware resolver (host cargo)
+# auto-selects dependency versions compatible with rustc 1.75 — avoids edition2024/MSRV blowups.
+rust-version = "1.75.0"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "sieve"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = { version = "0.30.1", features = ["init-if-needed"] }
+# Groth16 verification using Solana native alt_bn128 syscalls (Light Protocol).
+groth16-solana = "0.0.3"
+# NOTE: Poseidon uses the native Solana syscall (anchor_lang::solana_program::poseidon),
+# not a Rust crate — avoids loading 30KB of round constants onto the BPF stack.

@@ -1,0 +1,25 @@
+# Rust / Anchor
+target/
+.anchor/
+test-ledger/
+**/*.rs.bk
+
+# Node
+node_modules/
+dist/
+.next/
+*.log
+
+# Circuits build artifacts (zkeys, ptau, wasm, r1cs) — regenerate with scripts/
+circuits/build/
+*.ptau
+*.zkey
+
+# Secrets / keys
+.env
+.env.local
+*.wallet.json
+cre-solana-key.json
+
+# OS
+.DS_Store

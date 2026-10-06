@@ -1,0 +1,18 @@
+{
+  "name": "sieve-circuits",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Circom circuits for Sieve (withdraw dual-membership + ragequit + auditor stretch)",
+  "scripts": {
+    "compile": "./scripts/compile.sh",
+    "setup": "./scripts/setup.sh",
+    "all": "./scripts/compile.sh && ./scripts/setup.sh"
+  },
+  "dependencies": {
+    "circomlib": "^2.0.5",
+    "circomlibjs": "^0.1.7"
+  },
+  "devDependencies": {
+    "snarkjs": "^0.7.4"
+  }
+}

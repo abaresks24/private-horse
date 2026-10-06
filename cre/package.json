@@ -1,0 +1,21 @@
+{
+  "name": "sieve-cre",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sieve CRE workflow — multi-source provenance tracing, DON consensus, append-only ASP root -> Solana",
+  "type": "module",
+  "scripts": {
+    "cre:simulate": "cre workflow simulate ./src/workflow.ts --config ./config.json",
+    "cre:deploy": "cre workflow deploy ./src/workflow.ts --config ./config.json",
+    "gen:bindings": "cre generate-bindings solana --idl ../target/idl/sieve.json --language typescript -o ./src/generated",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@chainlink/cre-sdk": "^0.3.0",
+    "circomlibjs": "^0.1.7"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "@types/node": "^22.0.0"
+  }
+}

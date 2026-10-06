@@ -1,0 +1,8 @@
+[workspace]
+members = ["programs/*"]
+resolver = "2"
+
+[profile.release]
+overflow-checks = true
+# NOTE: do NOT set lto = "fat" / codegen-units = 1 here — on the SBF target it triggers
+# "Branch target out of insn range" during linking.

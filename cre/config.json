@@ -1,0 +1,19 @@
+{
+  "schedule": "*/30 * * * * *",
+  "solana": {
+    "cluster": "devnet",
+    "rpcUrl": "https://api.devnet.solana.com",
+    "programId": "4R4FwpZK1Tj9wAFnyfx17bDTa14hKEoLc5dhjsHhtA1X",
+    "forwarderAuthorityEnv": "CRE_SOLANA_PRIVATE_KEY"
+  },
+  "provenance": {
+    "quorum": 2,
+    "sources": [
+      { "name": "mock-taint", "url": "http://localhost:8787/trace?address=" },
+      { "name": "ofac", "url": "http://localhost:8787/ofac?address=" },
+      { "name": "hack-attribution", "url": "http://localhost:8787/hacks?address=" }
+    ],
+    "comment": "In prod, point these at TRM / Elliptic / Chainalysis / an OFAC mirror. The mock server (scripts/provenance-mock-server.ts) lets you flip an address clean<->dirty live on stage."
+  },
+  "treeHeight": 20
+}

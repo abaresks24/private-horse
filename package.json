@@ -1,0 +1,27 @@
+{
+  "name": "sieve",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Provenance-proven, decentralized, auditable privacy pool on Solana (CRE-maintained ASP)",
+  "comment": "Each package installs independently (circuits/cre/app have their own node_modules). cre uses @chainlink/cre-sdk from Chainlink's registry (not public npm).",
+  "scripts": {
+    "circuits": "pnpm --filter sieve-circuits all",
+    "anchor:build": "anchor build",
+    "anchor:deploy": "anchor deploy --provider.cluster devnet",
+    "test": "anchor test",
+    "cre": "pnpm --filter sieve-cre cre:simulate",
+    "mock": "ts-node scripts/provenance-mock-server.ts",
+    "demo": "ts-node scripts/demo.ts",
+    "app": "pnpm --filter sieve-app dev"
+  },
+  "devDependencies": {
+    "@coral-xyz/anchor": "^0.30.1",
+    "@solana/web3.js": "^1.99.0",
+    "chai": "^4.4.1",
+    "circomlibjs": "^0.1.7",
+    "snarkjs": "^0.7.6",
+    "ts-mocha": "^10.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.0"
+  }
+}
