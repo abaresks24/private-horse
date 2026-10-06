@@ -59,8 +59,11 @@ header.site {
   background: color-mix(in srgb, var(--paper) 90%, transparent); backdrop-filter: blur(6px);
 }
 header.site .brand { display: flex; align-items: center; gap: 11px; font-family: var(--display); font-weight: 700; font-size: 20px; letter-spacing: -0.01em; color: var(--ink); }
-header.site nav { margin-left: auto; display: flex; gap: 24px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
+header.site nav { margin-left: auto; display: flex; gap: 30px; align-items: center; font-family: var(--serif); font-size: 15px; }
 header.site nav a { color: var(--ink-soft); }
+header.site nav a:hover { color: var(--red); text-decoration: none; }
+header.site nav a.nav-devnet { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; border: 1px solid var(--line-strong); padding: 7px 12px; color: var(--ink); }
+header.site nav a.nav-devnet:hover { background: var(--ink); color: var(--paper); }
 
 section.band { padding: 90px 0; border-bottom: 1px solid var(--line); }
 
@@ -68,10 +71,10 @@ section.band { padding: 90px 0; border-bottom: 1px solid var(--line); }
 .hero { position: relative; padding: 76px 0 70px; }
 .hero .kicker { display: flex; gap: 10px; align-items: center; }
 .hero .figure {
-  margin-top: 42px; background: var(--red); aspect-ratio: 16/7; display: grid; place-items: center;
-  overflow: hidden; position: relative;
+  margin-top: 42px; background: var(--red); aspect-ratio: 16/8; display: grid; place-items: center;
+  overflow: hidden; position: relative; padding: 26px 26px 40px;
 }
-.hero .figure video, .hero .figure img { width: 100%; height: 100%; object-fit: contain; }
+.hero .figure video, .hero .figure img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: block; }
 
 .cols { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 56px; }
 @media (max-width: 820px) { .cols { grid-template-columns: 1fr; gap: 32px; } }
@@ -102,7 +105,7 @@ section.band { padding: 90px 0; border-bottom: 1px solid var(--line); }
 pre.note { font-family: var(--mono); font-size: 12px; background: var(--ink); color: #e4ddcc; padding: 14px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
 input.field { font-family: var(--mono); font-size: 13px; width: 100%; padding: 11px 13px; background: var(--paper); border: 1px solid var(--line-strong); color: var(--ink); margin: 8px 0; }
 
-footer.site { padding: 40px 28px 80px; color: var(--taupe); font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; }
+footer.site { padding: 36px 28px 80px; color: var(--taupe); font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; border-top: 1px solid var(--line); }
 
 /* ---- loader (RED, black horse shows on it) ---- */
 .loader {
@@ -117,5 +120,20 @@ footer.site { padding: 40px 28px 80px; color: var(--taupe); font-family: var(--m
 .loader .barline { width: 220px; height: 2px; background: rgba(255,255,255,0.28); position: relative; overflow: hidden; }
 .loader .barline::after { content: ""; position: absolute; inset: 0; width: 38%; background: #fff; animation: canter 1.05s cubic-bezier(.45,.05,.3,1) infinite; }
 @keyframes canter { 0% { transform: translateX(-120%); } 100% { transform: translateX(330%); } }
+
+/* ---- app panels ---- */
+.appgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+@media (max-width: 860px) { .appgrid { grid-template-columns: 1fr; } }
+.actcard { border: 1px solid var(--line-strong); padding: 22px; display: flex; flex-direction: column; gap: 10px; background: rgba(255,255,255,0.4); }
+.actcard h3 { font-family: var(--display); font-weight: 700; font-size: 1.12rem; margin: 0; letter-spacing: -0.01em; }
+.actcard p { margin: 0; font-size: 0.95rem; }
+.actcard .btn { margin-top: auto; }
+.actcard textarea.field { resize: vertical; }
+.logline { margin-top: 22px; padding: 14px 16px; border: 1px solid var(--line-strong); font-family: var(--mono); font-size: 13px; line-height: 1.5; }
+.src { font-family: var(--mono); font-size: 12px; padding: 10px 14px; border: 1px solid var(--line-strong); cursor: pointer; }
+
+/* wallet-adapter button -> DA */
+.wallet-adapter-button { background: var(--ink) !important; color: var(--paper) !important; font-family: var(--mono) !important; font-size: 12px !important; letter-spacing: 0.1em !important; text-transform: uppercase !important; border-radius: 0 !important; height: auto !important; padding: 13px 18px !important; line-height: 1 !important; }
+.wallet-adapter-button:not([disabled]):hover { background: var(--red) !important; }
 
 ::selection { background: var(--red); color: #fff; }

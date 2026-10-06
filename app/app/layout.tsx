@@ -1,12 +1,15 @@
 import "./globals.css";
 import HorseMark from "../components/HorseMark";
 import { Loader } from "../components/Loader";
+import Providers from "../components/Providers";
 
 export const metadata = {
   title: "Private Horse — private, provably-clean payments on Solana",
   description:
     "A privacy pool whose clean-set is maintained by a decentralized Chainlink CRE oracle. Private by default, clean by proof, auditable by exception.",
 };
+
+const EXPLORER = "https://explorer.solana.com/address/4R4FwpZK1Tj9wAFnyfx17bDTa14hKEoLc5dhjsHhtA1X?cluster=devnet";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -20,26 +23,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        <Loader minMs={1800}>
-          <header className="site">
-            <a href="/" className="brand">
-              <HorseMark size={30} />
-              <span>Private&nbsp;Horse</span>
-            </a>
-            <nav>
-              <a href="/#how">Mechanism</a>
-              <a href="/#pool">Pool</a>
-              <a href="/demo">Demo</a>
-              <a href="https://explorer.solana.com/address/4R4FwpZK1Tj9wAFnyfx17bDTa14hKEoLc5dhjsHhtA1X?cluster=devnet" target="_blank">
-                Devnet&nbsp;↗
+        <Providers>
+          <Loader minMs={2200}>
+            <header className="site">
+              <a href="/" className="brand">
+                <HorseMark size={30} />
+                <span>Private&nbsp;Horse</span>
               </a>
-            </nav>
-          </header>
-          <main>{children}</main>
-          <footer className="site">
-            PRIVATE HORSE · SOLANA DEVNET · CHAINLINK CRE — private by default, clean by proof, auditable by exception.
-          </footer>
-        </Loader>
+              <nav>
+                <a href="/#how">How it works</a>
+                <a href="/#app">Use the pool</a>
+                <a href={EXPLORER} target="_blank" rel="noreferrer" className="nav-devnet">Devnet&nbsp;↗</a>
+              </nav>
+            </header>
+            <main>{children}</main>
+            <footer className="site">
+              <span>Private Horse</span>
+              <span>Solana devnet · Chainlink CRE</span>
+              <span>private · clean · auditable</span>
+            </footer>
+          </Loader>
+        </Providers>
       </body>
     </html>
   );

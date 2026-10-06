@@ -1,0 +1,1108 @@
+{
+  "address": "4R4FwpZK1Tj9wAFnyfx17bDTa14hKEoLc5dhjsHhtA1X",
+  "metadata": {
+    "name": "sieve",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Sieve — provenance-proven, decentralized, auditable privacy pool on Solana"
+  },
+  "instructions": [
+    {
+      "name": "deposit",
+      "docs": [
+        "Deposit the fixed denomination and insert `commitment = Poseidon(secret, nullifier, amount)`",
+        "as a leaf in the deposit Merkle tree. The depositor address + slot are recorded so the CRE",
+        "workflow can trace provenance off-chain."
+      ],
+      "discriminator": [
+        242,
+        35,
+        198,
+        137,
+        82,
+        225,
+        242,
+        182
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "deposit_record",
+          "docs": [
+            "Per-leaf record of the depositor (origin for ragequit) + the hook the CRE workflow reads",
+            "via RPC to know which address to trace for provenance."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  112,
+                  111,
+                  115,
+                  105,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pool.next_index",
+                "account": "Pool"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "Vault PDA that custodies deposited lamports (seeds = [b\"vault\"])."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "depositor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "commitment",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize",
+      "docs": [
+        "One-time setup. Stores the authorized Keystone Forwarder signer (the DON authority),",
+        "the auditor public key (BabyJubjub point, for selective disclosure), and the fixed",
+        "denomination of the pool (single denomination => maximal anonymity set)."
+      ],
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "forwarder_authority",
+          "type": "pubkey"
+        },
+        {
+          "name": "auditor_pubkey",
+          "type": {
+            "array": [
+              "u8",
+              64
+            ]
+          }
+        },
+        {
+          "name": "denomination",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "on_report",
+      "docs": [
+        "Append-only update of the association-set root, delivered by the CRE DON via the Keystone",
+        "Forwarder. A root, once published, is retained in a ring buffer forever (no retroactive",
+        "freeze: a withdrawal proves against any historical ASP root >= its deposit)."
+      ],
+      "discriminator": [
+        214,
+        173,
+        18,
+        221,
+        173,
+        148,
+        151,
+        208
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "forwarder",
+          "docs": [
+            "Must equal `pool.forwarder_authority`. This is the ONLY trust assumption on-chain: the",
+            "report came from the authorized DON forwarder."
+          ],
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "report",
+          "type": {
+            "defined": {
+              "name": "AspReport"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "poseidon_debug",
+      "docs": [
+        "TEMPORARY — Poseidon parity check (delete before real deploy). Logs on-chain Poseidon(l,r)."
+      ],
+      "discriminator": [
+        218,
+        56,
+        207,
+        96,
+        166,
+        146,
+        228,
+        107
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "docs": [
+            "Only needed so the ix has a fee payer; not read."
+          ],
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "left",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "right",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "ragequit",
+      "docs": [
+        "Escape hatch for a deposit that the clean set never included. Proves ownership of the",
+        "commitment and sends funds back to the ORIGINAL depositing address (public, no privacy).",
+        "Guarantees no user is ever permanently frozen."
+      ],
+      "discriminator": [
+        142,
+        182,
+        225,
+        76,
+        251,
+        128,
+        172,
+        31
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "nullifier_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  110,
+                  117,
+                  108,
+                  108,
+                  105,
+                  102,
+                  105,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "args.nullifier_hash"
+              }
+            ]
+          }
+        },
+        {
+          "name": "deposit_record",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  112,
+                  111,
+                  115,
+                  105,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "args.leaf_index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "original_depositor",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "RagequitArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "withdraw",
+      "docs": [
+        "Private withdrawal. Verifies a Groth16 proof that the caller's commitment is a member of",
+        "BOTH the deposit tree and a published ASP root, that `nullifier_hash = Poseidon(nullifier)`,",
+        "and (stretch) that `auditor_ct` honestly encrypts (recipient, amount) under the auditor key."
+      ],
+      "discriminator": [
+        183,
+        18,
+        70,
+        156,
+        148,
+        109,
+        161,
+        34
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "nullifier_record",
+          "docs": [
+            "`init` fails if the nullifier PDA already exists => double-withdraw is impossible, without",
+            "revealing which commitment was spent."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  110,
+                  117,
+                  108,
+                  108,
+                  105,
+                  102,
+                  105,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "args.nullifier_hash"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "recipient",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "docs": [
+            "Relayer or the user; pays rent for the nullifier record. Can be anyone (supports relayers)."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "WithdrawArgs"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "DepositRecord",
+      "discriminator": [
+        83,
+        232,
+        10,
+        31,
+        251,
+        49,
+        189,
+        167
+      ]
+    },
+    {
+      "name": "NullifierRecord",
+      "discriminator": [
+        56,
+        18,
+        57,
+        175,
+        69,
+        202,
+        189,
+        70
+      ]
+    },
+    {
+      "name": "Pool",
+      "discriminator": [
+        241,
+        154,
+        109,
+        4,
+        17,
+        177,
+        109,
+        188
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "AspRootUpdated",
+      "discriminator": [
+        4,
+        104,
+        47,
+        28,
+        43,
+        249,
+        229,
+        231
+      ]
+    },
+    {
+      "name": "DepositEvent",
+      "discriminator": [
+        120,
+        248,
+        61,
+        83,
+        31,
+        142,
+        107,
+        144
+      ]
+    },
+    {
+      "name": "WithdrawEvent",
+      "discriminator": [
+        22,
+        9,
+        133,
+        26,
+        160,
+        44,
+        71,
+        192
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "TreeFull",
+      "msg": "Merkle tree is full"
+    },
+    {
+      "code": 6001,
+      "name": "UnknownDepositRoot",
+      "msg": "Unknown or stale deposit Merkle root"
+    },
+    {
+      "code": 6002,
+      "name": "UnknownAspRoot",
+      "msg": "Unknown association-set (ASP) root"
+    },
+    {
+      "code": 6003,
+      "name": "NullifierAlreadySpent",
+      "msg": "Nullifier has already been spent"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidProof",
+      "msg": "Invalid Groth16 proof"
+    },
+    {
+      "code": 6005,
+      "name": "UnauthorizedForwarder",
+      "msg": "Report is not signed by the authorized DON forwarder"
+    },
+    {
+      "code": 6006,
+      "name": "StaleReport",
+      "msg": "ASP report is stale (epoch not newer than stored)"
+    },
+    {
+      "code": 6007,
+      "name": "NonMonotonicRoot",
+      "msg": "ASP root must be append-only (new root must extend the previous set)"
+    },
+    {
+      "code": 6008,
+      "name": "BadDenomination",
+      "msg": "Incorrect deposit denomination"
+    },
+    {
+      "code": 6009,
+      "name": "RecipientMismatch",
+      "msg": "Recipient account does not match proof public input"
+    },
+    {
+      "code": 6010,
+      "name": "NotOriginalDepositor",
+      "msg": "Ragequit must send to the original depositor"
+    }
+  ],
+  "types": [
+    {
+      "name": "AspReport",
+      "docs": [
+        "DON-signed report delivered by the Keystone Forwarder. Mirror this struct EXACTLY in the CRE",
+        "workflow's Borsh encoding (cf. cre-templates/solana-read-write). Borsh mismatch = silent failure."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "asp_root",
+            "docs": [
+              "New append-only association-set Merkle root."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "epoch",
+            "docs": [
+              "Monotonic epoch (must be strictly greater than the stored epoch)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "clean_count",
+            "docs": [
+              "Number of clean deposits in the set at this epoch (for the UI / sanity, not trust-bearing)."
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AspRootUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "asp_root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "epoch",
+            "type": "u64"
+          },
+          {
+            "name": "clean_count",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DepositEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "commitment",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "leaf_index",
+            "type": "u64"
+          },
+          {
+            "name": "depositor",
+            "type": "pubkey"
+          },
+          {
+            "name": "new_root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "DepositRecord",
+      "docs": [
+        "Records the original depositor for each leaf index, so `ragequit` can only refund the origin.",
+        "PDA seeds = [b\"deposit\", leaf_index_le]. Also the hook the CRE workflow reads (via RPC) to know",
+        "which address to trace for provenance."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "depositor",
+            "type": "pubkey"
+          },
+          {
+            "name": "leaf_index",
+            "type": "u64"
+          },
+          {
+            "name": "commitment",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "NullifierRecord",
+      "docs": [
+        "One PDA per spent nullifier (seeds = [b\"nullifier\", nullifier_hash]). Its mere existence marks",
+        "the note as spent — prevents double-withdraw without revealing which commitment was spent."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "spent",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Pool",
+      "docs": [
+        "Global pool account (PDA, seeds = [b\"pool\"]). Holds config + both Merkle commitments."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "forwarder_authority",
+            "docs": [
+              "Authorized Keystone Forwarder signer — only reports from this key are accepted in on_report."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "auditor_pubkey",
+            "docs": [
+              "Auditor BabyJubjub public key (x||y, 32+32 bytes) for selective disclosure (stretch)."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          },
+          {
+            "name": "denomination",
+            "docs": [
+              "Fixed deposit denomination in lamports (or token base units)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "next_index",
+            "type": "u64"
+          },
+          {
+            "name": "filled_subtrees",
+            "type": {
+              "array": [
+                {
+                  "array": [
+                    "u8",
+                    32
+                  ]
+                },
+                20
+              ]
+            }
+          },
+          {
+            "name": "deposit_roots",
+            "type": {
+              "array": [
+                {
+                  "array": [
+                    "u8",
+                    32
+                  ]
+                },
+                16
+              ]
+            }
+          },
+          {
+            "name": "deposit_root_index",
+            "type": "u64"
+          },
+          {
+            "name": "asp_roots",
+            "type": {
+              "array": [
+                {
+                  "array": [
+                    "u8",
+                    32
+                  ]
+                },
+                16
+              ]
+            }
+          },
+          {
+            "name": "asp_root_index",
+            "type": "u64"
+          },
+          {
+            "name": "asp_epoch",
+            "docs": [
+              "Monotonic epoch of the last accepted ASP report."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RagequitArgs",
+      "docs": [
+        "Escape hatch: a deposit the clean set never included can always be recovered — but ONLY to the",
+        "original depositing address (public, no privacy). Guarantees no user is ever frozen.",
+        "",
+        "The ragequit circuit proves knowledge of (secret, nullifier) for a commitment that is a member",
+        "of the deposit tree, WITHOUT requiring ASP membership. Funds go to `deposit_record.depositor`."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "proof_a",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          },
+          {
+            "name": "proof_b",
+            "type": {
+              "array": [
+                "u8",
+                128
+              ]
+            }
+          },
+          {
+            "name": "proof_c",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          },
+          {
+            "name": "root_deposits",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "nullifier_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "leaf_index",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "proof_a",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          },
+          {
+            "name": "proof_b",
+            "type": {
+              "array": [
+                "u8",
+                128
+              ]
+            }
+          },
+          {
+            "name": "proof_c",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          },
+          {
+            "name": "root_deposits",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "root_asp",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "nullifier_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "recipient_field",
+            "docs": [
+              "recipient reduced mod the BN254 scalar field, as bound in-circuit."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "auditor_ct",
+            "docs": [
+              "(stretch) ElGamal ciphertext (c1x,c1y,c2x,c2y) encrypting (recipient,amount) to auditor key."
+            ],
+            "type": {
+              "array": [
+                {
+                  "array": [
+                    "u8",
+                    32
+                  ]
+                },
+                4
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "WithdrawEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nullifier_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "auditor_ct",
+            "docs": [
+              "Selective-disclosure ciphertext; only the designated auditor can decrypt it."
+            ],
+            "type": {
+              "array": [
+                {
+                  "array": [
+                    "u8",
+                    32
+                  ]
+                },
+                4
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
