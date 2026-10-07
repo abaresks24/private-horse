@@ -1,6 +1,13 @@
 /* Private Horse — art direction, built on the logo's own palette: red #ce0000, black horse, bone.
-   Editorial but bold. Bricolage Grotesque (display) + Spectral (serif body) + Space Mono (data) —
-   deliberately not the Fraunces/Inter default. */
+   One typeface everywhere: Aptos Black (self-hosted). */
+
+@font-face {
+  font-family: "Aptos Black";
+  src: url("/fonts/aptos-black.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root {
   --paper: #f3efe6;
@@ -13,11 +20,11 @@
   --line: rgba(19, 17, 16, 0.16);
   --line-strong: rgba(19, 17, 16, 0.42);
 
-  /* agama.finance type system: Inter (UI/sans) + Instrument Serif (editorial accent) */
-  --display: "Inter", system-ui, sans-serif;
-  --serif: "Instrument Serif", Georgia, "Times New Roman", serif;
-  --sans: "Inter", system-ui, sans-serif;
-  --mono: "Geist Mono", ui-monospace, monospace;
+  /* Aptos Black everywhere — titles, body, numbers, data. No other typeface. */
+  --display: "Aptos Black", system-ui, sans-serif;
+  --serif: "Aptos Black", system-ui, sans-serif;
+  --sans: "Aptos Black", system-ui, sans-serif;
+  --mono: "Aptos Black", ui-monospace, monospace;
   --header-h: 66px;
 }
 
@@ -93,14 +100,24 @@ section.band { padding: 90px 0; border-bottom: 1px solid var(--line); }
 .landing::before {
   content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
   background:
-    radial-gradient(120% 80% at 85% 20%, rgba(206,0,0,0.05), transparent 60%),
-    radial-gradient(90% 90% at 10% 100%, rgba(206,0,0,0.06), transparent 55%);
+    /* soft red glows */
+    radial-gradient(120% 80% at 86% 12%, rgba(206,0,0,0.07), transparent 58%),
+    radial-gradient(90% 90% at 6% 108%, rgba(206,0,0,0.08), transparent 52%),
+    /* ink-ripple rings echoing the horse */
+    radial-gradient(circle at 14% 24%, transparent 116px, rgba(206,0,0,0.09) 117px, transparent 120px),
+    radial-gradient(circle at 14% 24%, transparent 168px, rgba(206,0,0,0.055) 169px, transparent 172px),
+    radial-gradient(circle at 90% 74%, transparent 150px, rgba(206,0,0,0.07) 151px, transparent 154px),
+    /* fine dotted field */
+    radial-gradient(rgba(206,0,0,0.05) 1px, transparent 1.5px);
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
+  background-size: auto, auto, auto, auto, auto, 24px 24px;
 }
 .landing::after {
-  content: ""; position: absolute; right: -6%; bottom: -14%; width: min(62vw, 760px); height: min(62vw, 760px);
-  z-index: 0; pointer-events: none; opacity: 0.045;
-  background: url("/logo.png") center/contain no-repeat; filter: saturate(0);
-  transform: rotate(-4deg);
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  opacity: 0.05; filter: saturate(0);
+  background:
+    url("/logo.png") right -6% bottom -14% / min(60vw, 720px) no-repeat,
+    url("/logo.png") left -9% top -8% / min(32vw, 360px) no-repeat;
 }
 .landing .wrap2, .landing-head { position: relative; z-index: 1; }
 .landing .wrap2 {
