@@ -14,6 +14,7 @@
   --line-strong: rgba(19, 17, 16, 0.42);
 
   --display: "Geist", system-ui, sans-serif;
+  --serif: "Instrument Serif", Georgia, "Times New Roman", serif; /* editorial character: name + slogan */
   --sans: "Geist", system-ui, sans-serif;
   --mono: "Geist Mono", ui-monospace, monospace;
   --header-h: 66px;
@@ -55,7 +56,7 @@ header.site {
   border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 40;
   background: color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter: blur(8px);
 }
-header.site .brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 700; font-size: 18px; letter-spacing: -0.01em; color: var(--ink); }
+header.site .brand { display: flex; align-items: center; gap: 10px; font-family: var(--serif); font-weight: 400; font-size: 22px; letter-spacing: 0; color: var(--ink); }
 header.site nav { margin-left: auto; display: flex; gap: 26px; align-items: center; font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; }
 header.site nav a { color: var(--ink-soft); }
 header.site nav a:hover { color: var(--red); text-decoration: none; }
@@ -80,7 +81,22 @@ section.band { padding: 90px 0; border-bottom: 1px solid var(--line); }
 .landing-head .brand { color: var(--ink); }
 .landing-head .wallet-slot { margin-left: auto; }
 
-.landing { height: 100svh; overflow: hidden; background: var(--paper); color: var(--red); display: grid; align-items: center; }
+/* position:fixed locks the page — the "/" route can never scroll, on any browser/URL-bar height */
+.landing { position: fixed; inset: 0; overflow: hidden; background: var(--paper); color: var(--red); display: grid; align-items: center; }
+/* faint ink-smoke motifs echoing the horse art: a ghost horse bleeding off, red hairline field, grain */
+.landing::before {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(120% 80% at 85% 20%, rgba(206,0,0,0.05), transparent 60%),
+    radial-gradient(90% 90% at 10% 100%, rgba(206,0,0,0.06), transparent 55%);
+}
+.landing::after {
+  content: ""; position: absolute; right: -6%; bottom: -14%; width: min(62vw, 760px); height: min(62vw, 760px);
+  z-index: 0; pointer-events: none; opacity: 0.045;
+  background: url("/logo.png") center/contain no-repeat; filter: saturate(0);
+  transform: rotate(-4deg);
+}
+.landing .wrap2, .landing-head { position: relative; z-index: 1; }
 .landing .wrap2 {
   width: 100%; max-width: 1180px; margin: 0 auto; padding: 96px clamp(24px, 6vw, 72px) 48px;
   display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 48px; align-items: center;
@@ -90,8 +106,8 @@ section.band { padding: 90px 0; border-bottom: 1px solid var(--line); }
 @media (max-width: 880px) { .landing .copy { justify-items: center; } .landing .horse { order: -1; } }
 .landing .headblock { display: grid; gap: 14px; justify-items: start; }
 @media (max-width: 880px) { .landing .headblock { justify-items: center; } }
-.landing .landing-title { font-family: var(--display); font-weight: 700; color: var(--red); margin: 0; font-size: clamp(2.8rem, 6vw, 5rem); line-height: 0.98; letter-spacing: -0.03em; }
-.landing .landing-slogan { font-family: var(--sans); font-weight: 500; margin: 0; font-size: clamp(1.1rem, 1.7vw, 1.45rem); color: var(--red-2); max-width: 34ch; }
+.landing .landing-title { font-family: var(--serif); font-weight: 400; color: var(--red); margin: 0; font-size: clamp(3.4rem, 8vw, 6.4rem); line-height: 0.92; letter-spacing: -0.01em; }
+.landing .landing-slogan { font-family: var(--serif); font-style: italic; font-weight: 400; margin: 0; font-size: clamp(1.35rem, 2.3vw, 1.95rem); line-height: 1.25; color: var(--red-2); max-width: 30ch; }
 .landing .ctas { display: flex; gap: 14px; flex-wrap: wrap; }
 .landing .btn { background: var(--red); color: #fff; }
 .landing .btn:hover { background: var(--red-2); color: #fff; }
@@ -137,7 +153,7 @@ footer.site { padding: 36px 28px 80px; color: var(--taupe); font-family: var(--m
 .loader .stage { display: grid; place-items: center; gap: 20px; width: min(520px, 78vw); }
 .loader .horsewrap { width: min(460px, 72vw); display: grid; place-items: center; }
 .loader .horsewrap video, .loader .horsewrap img { width: 100%; height: auto; max-height: 48vh; object-fit: contain; }
-.loader .wordmark { font-family: var(--display); font-weight: 700; font-size: 24px; letter-spacing: 0.01em; color: var(--red); }
+.loader .wordmark { font-family: var(--serif); font-weight: 400; font-size: 30px; letter-spacing: 0.01em; color: var(--red); }
 
 /* ---- docs ---- */
 .doc-layout { display: grid; grid-template-columns: 200px 1fr; gap: 56px; align-items: start; }
@@ -172,5 +188,35 @@ table.audit td { padding: 12px; border-bottom: 1px solid var(--line); }
 /* wallet-adapter button -> DA */
 .wallet-adapter-button { background: var(--ink) !important; color: var(--paper) !important; font-family: var(--mono) !important; font-size: 12px !important; letter-spacing: 0.1em !important; text-transform: uppercase !important; border-radius: 0 !important; height: auto !important; padding: 13px 18px !important; line-height: 1 !important; }
 .wallet-adapter-button:not([disabled]):hover { background: var(--red) !important; }
+
+/* wallet-adapter modal -> paper/ink/red, square, mono labels (kills the default dark rounded look) */
+.wallet-adapter-modal-overlay { background: rgba(19,17,16,0.55) !important; backdrop-filter: blur(3px); }
+.wallet-adapter-modal-wrapper {
+  background: var(--paper) !important; border: 1px solid var(--line-strong) !important;
+  border-radius: 0 !important; box-shadow: 0 24px 70px rgba(19,17,16,0.28) !important;
+  color: var(--ink) !important; font-family: var(--sans) !important;
+}
+.wallet-adapter-modal-title {
+  color: var(--ink) !important; font-family: var(--display) !important; font-weight: 700 !important;
+  font-size: 1.3rem !important; letter-spacing: -0.01em !important;
+}
+.wallet-adapter-modal-button-close {
+  background: transparent !important; border: 1px solid var(--line-strong) !important; border-radius: 0 !important;
+}
+.wallet-adapter-modal-button-close svg { fill: var(--ink) !important; }
+.wallet-adapter-modal-list { margin: 0 !important; }
+.wallet-adapter-modal-list li { margin-bottom: 8px !important; }
+.wallet-adapter-modal-list .wallet-adapter-button {
+  background: transparent !important; color: var(--ink) !important; border: 1px solid var(--line-strong) !important;
+  border-radius: 0 !important; font-family: var(--mono) !important; font-size: 13px !important;
+  letter-spacing: 0.04em !important; text-transform: none !important; padding: 16px 18px !important; height: auto !important;
+  transition: background 0.14s, color 0.14s, border-color 0.14s !important;
+}
+.wallet-adapter-modal-list .wallet-adapter-button:hover {
+  background: var(--red) !important; color: #fff !important; border-color: var(--red) !important;
+}
+.wallet-adapter-modal-list .wallet-adapter-button:hover svg path { fill: #fff !important; }
+.wallet-adapter-modal-list-more { color: var(--red) !important; font-family: var(--mono) !important; }
+.wallet-adapter-modal-list-more svg { fill: var(--red) !important; }
 
 ::selection { background: var(--red); color: #fff; }
