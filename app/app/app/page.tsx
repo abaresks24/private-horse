@@ -162,13 +162,11 @@ export default function AppPage() {
                 </div>
               </label>
 
-              {connected && prov && (
-                <div className={`provline ${!prov.up ? "muted" : provBlocked ? "bad" : "good"}`}>
-                  {!prov.up
-                    ? "Provenance service offline — deposit allowed (advisory check skipped)"
-                    : provBlocked
-                      ? `⚠ Your funds trace clean on only ${prov.votes}/${prov.total} sources (need ${prov.quorum}).`
-                      : `✓ Your funds trace clean on ${prov.votes}/${prov.total} sources — provenance validated by the DON`}
+              {connected && prov && prov.up && (
+                <div className={`provline ${provBlocked ? "bad" : "good"}`}>
+                  {provBlocked
+                    ? `⚠ Your funds trace clean on only ${prov.votes}/${prov.total} sources (need ${prov.quorum}).`
+                    : `✓ Your funds trace clean on ${prov.votes}/${prov.total} sources — provenance validated by the DON`}
                 </div>
               )}
 
