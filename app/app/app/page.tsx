@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useConnection, useWallet, useAnchorWallet } from "@solana/wallet-adapter-react";
 import { LoaderOverlay } from "../../components/Loader";
 import {
-  getProgram, depositBatch, provenanceCheck, proveWithdraw, withdraw, proveRagequit, ragequit,
+  getProgram, depositBatch, provenanceCheck, proveWithdraw, withdrawViaRelay, proveRagequit, ragequit,
   pool, freshRecipient,
 } from "../../lib/protocol";
 import { DERIVATION_MESSAGE, freeNotes, discoverDeposits, type MyDeposit } from "../../lib/account";
@@ -119,7 +119,7 @@ export default function AppPage() {
         setBusy(`Proving & withdrawing ${k + 1}/${avail.length}`);
         const r = freshRecipient();
         const { proof, auditorCt } = await proveWithdraw(connection, avail[k].note, r);
-        sigs.push(await withdraw(program, publicKey, proof, r, auditorCt));
+        sigs.push(await withdrawViaRelay(proof, r, auditorCt)); // relayer pays -> wallet unlinked
       }
       setLog({ kind: "ok", msg: `Withdrew ${avail.length} × ${sol(denom)} privately → fresh addresses.`, sigs });
       const s = await ensureSeed(); setMyDeposits(await discoverDeposits(connection, s, denom)); refresh();

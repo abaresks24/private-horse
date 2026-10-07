@@ -221,6 +221,19 @@ export async function withdraw(program: Program, wallet: PublicKey, proof: Forma
     .rpc();
 }
 
+/** Submit the withdrawal through the relayer so the user's wallet never appears in the tx. */
+export async function withdrawViaRelay(proof: FormattedProof, recipient: PublicKey, auditorCt: number[][] = ZERO_CT): Promise<string> {
+  const [rootDeposits, rootAsp, nullifierHash, recipientField] = proof.publicSignals;
+  const res = await fetch("/api/relay", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ proofA: proof.proofA, proofB: proof.proofB, proofC: proof.proofC, rootDeposits, rootAsp, nullifierHash, recipientField, auditorCt, recipient: recipient.toBase58() }),
+  });
+  const j = await res.json();
+  if (j.error) throw new Error(j.error);
+  return j.sig as string;
+}
+
 export interface AuditRow { sig: string; recipient: string; auditorCt: bigint[]; }
 
 /** Read recent WithdrawEvents (sig + public recipient + auditor ciphertext). Read-only, no wallet. */
