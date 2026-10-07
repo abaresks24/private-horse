@@ -231,7 +231,8 @@ footer.site { padding: 36px 28px 80px; color: var(--taupe); font-family: var(--m
 .seg button { flex: 1; font-family: var(--serif); font-size: 1.2rem; padding: 10px; background: none; border: 0; cursor: pointer; color: var(--taupe); transition: color 0.12s, background 0.12s; }
 .seg button.active { background: #fff; color: var(--red); box-shadow: 0 1px 3px rgba(19,17,16,0.1); }
 
-.amountbox { display: block; border: 1px solid var(--line); background: var(--paper); padding: 16px 18px; margin-bottom: 14px; }
+.amountbox { display: block; border: 1px solid var(--line); background: var(--paper); padding: 16px 18px; margin-bottom: 14px; min-height: 142px; }
+.amt-ph { color: var(--taupe); }
 .amt-lbl { font-family: var(--serif); font-style: italic; font-size: 1.1rem; color: var(--taupe); }
 .amt-row { display: flex; align-items: baseline; gap: 10px; margin-top: 6px; }
 .amt-input { flex: 1; min-width: 0; width: 100%; font-family: var(--serif); font-size: 2.8rem; line-height: 1.1; border: 0; background: none; color: var(--ink); outline: none; }

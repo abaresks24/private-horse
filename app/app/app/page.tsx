@@ -174,7 +174,14 @@ export default function AppPage() {
             <>
               {myDeposits === null ? (
                 <>
-                  <button className="bigbtn" disabled={!connected || !!busy} onClick={onLoad} style={{ marginTop: 8 }}>
+                  <div className="amountbox">
+                    <span className="amt-lbl">Withdrawable</span>
+                    <div className="amt-row">
+                      <span className="amt-input amt-ph">—</span>
+                      <span className="amt-unit">SOL</span>
+                    </div>
+                  </div>
+                  <button className="bigbtn" disabled={!connected || !!busy} onClick={onLoad}>
                     {!connected ? "Connect wallet" : "Load my deposits"}
                   </button>
                 </>
