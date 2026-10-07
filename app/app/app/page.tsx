@@ -156,11 +156,6 @@ export default function AppPage() {
                 </div>
               </label>
 
-              <div className="splitline">
-                <span>Split into</span>
-                <span className="split-val">{chunks} × {denomSol} SOL</span>
-              </div>
-
               {connected && prov && (
                 <div className={`provline ${!prov.up ? "muted" : provBlocked ? "bad" : "good"}`}>
                   {!prov.up
@@ -174,14 +169,12 @@ export default function AppPage() {
               <button className="bigbtn" disabled={!connected || !!busy || chunks < 1 || provBlocked} onClick={onMix}>
                 {!connected ? "Connect wallet to mix" : provBlocked ? "Provenance not validated" : `Mix ${total.toFixed(2)} SOL`}
               </button>
-              <p className="fineprint">Sign once to derive your private keys, then approve the {chunks || "N"} deposits. Nothing to save — your wallet is the backup.</p>
             </>
           ) : (
             <>
               {myDeposits === null ? (
                 <>
-                  <p className="fineprint" style={{ margin: "20px 2px 18px" }}>Your deposits are derived from your wallet — nothing to paste. Sign to load them.</p>
-                  <button className="bigbtn" disabled={!connected || !!busy} onClick={onLoad}>
+                  <button className="bigbtn" disabled={!connected || !!busy} onClick={onLoad} style={{ marginTop: 8 }}>
                     {!connected ? "Connect wallet" : "Load my deposits"}
                   </button>
                 </>
