@@ -33,15 +33,18 @@ export default function Auditor() {
   }
 
   return (
-    <section className="band">
+    <section className="app-shell">
       <LoaderOverlay hidden={!busy} label={busy || "Working"} />
       <div className="wrap" style={{ maxWidth: 920 }}>
-        <h1 className="display h-l">See the real address behind a private withdrawal.</h1>
-        <p className="lede" style={{ margin: "18px 0 20px", maxWidth: "64ch" }}>
-          Each private withdrawal encrypts its <strong>original depositor address</strong> to the
-          auditor&apos;s key. The recipient is already public; the link to the real identity is not —
-          unless you hold the auditor key. Paste it to reveal that link, one transaction at a time.
-        </p>
+        <header className="app-head">
+          <p className="kicker"><span className="dot" /> Selective disclosure · by exception</p>
+          <h1 className="section-title">See the real address behind a private withdrawal.</h1>
+          <p className="app-sub" style={{ maxWidth: "64ch" }}>
+            Each private withdrawal encrypts its <strong>original depositor address</strong> to the
+            auditor&apos;s key. The recipient is already public; the link to the real identity is not —
+            unless you hold the auditor key. Paste it to reveal that link, one transaction at a time.
+          </p>
+        </header>
 
         <input className="field" placeholder="auditor private key (0x…)" value={key} onChange={(e) => setKey(e.target.value)} />
         <div style={{ display: "flex", gap: 12, margin: "10px 0 6px", flexWrap: "wrap" }}>

@@ -22,8 +22,6 @@ const WALLET_LABELS = {
 
 const WalletMultiButton = () => <BaseWalletMultiButton labels={WALLET_LABELS} />;
 
-const EXPLORER = "https://explorer.solana.com/address/4R4FwpZK1Tj9wAFnyfx17bDTa14hKEoLc5dhjsHhtA1X?cluster=devnet";
-
 export default function HeaderBar() {
   const landing = usePathname() === "/";
 
@@ -40,17 +38,18 @@ export default function HeaderBar() {
     );
   }
 
+  const path = usePathname();
+  const cls = (p: string) => (path === p ? "active" : "");
   return (
     <header className="site">
       <a href="/" className="brand">
         <HorseMark size={26} />
         <span>Private&nbsp;Horse</span>
       </a>
-      <nav>
-        <a href="/app">App</a>
-        <a href="/auditor">Auditor</a>
-        <a href="/docs">Docs</a>
-        <a href={EXPLORER} target="_blank" rel="noreferrer">Devnet&nbsp;↗</a>
+      <nav className="sectiontabs">
+        <a href="/app" className={cls("/app")}>Horse</a>
+        <a href="/auditor" className={cls("/auditor")}>Auditor&nbsp;key</a>
+        <a href="/docs" className={cls("/docs")}>Docs</a>
       </nav>
       <div className="wallet-slot"><WalletMultiButton /></div>
     </header>

@@ -60,6 +60,11 @@ header.site .brand { display: flex; align-items: center; gap: 10px; font-family:
 header.site nav { margin-left: auto; display: flex; gap: 26px; align-items: center; font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; }
 header.site nav a { color: var(--ink-soft); }
 header.site nav a:hover { color: var(--red); text-decoration: none; }
+/* section tabs living in the top bar (between logo and wallet), editorial serif */
+header.site nav.sectiontabs { margin: 0; flex: 1; justify-content: center; gap: 34px; font-family: var(--serif); font-size: 1.25rem; letter-spacing: 0; }
+header.site nav.sectiontabs a { color: var(--taupe); padding: 2px 1px; border-bottom: 2px solid transparent; line-height: 1.1; }
+header.site nav.sectiontabs a:hover { color: var(--ink); text-decoration: none; }
+header.site nav.sectiontabs a.active { color: var(--red); border-bottom-color: var(--red); }
 header.site .wallet-slot { display: flex; align-items: center; }
 
 section.band { padding: 90px 0; border-bottom: 1px solid var(--line); }
@@ -219,11 +224,15 @@ footer.site { padding: 36px 28px 80px; color: var(--taupe); font-family: var(--m
 .actcard textarea.field { resize: vertical; }
 .actcard .btn { margin-top: auto; }
 
-/* receipt / log */
+/* receipt / log + on-chain proof */
 .receipt { margin-top: 24px; padding: 15px 18px; border: 1px solid var(--line-strong); border-left-width: 3px; font-family: var(--mono); font-size: 13px; line-height: 1.55; }
 .receipt.ok { border-left-color: var(--ink); color: var(--ink); }
 .receipt.err { border-left-color: var(--red); color: var(--red-2); }
-.receipt a { color: var(--red); margin-left: 6px; }
+.receipt-msg { margin-bottom: 8px; }
+.txproof { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-top: 10px; border-top: 1px dashed var(--line-strong); }
+.txproof .tag { font-weight: 600; color: #1c7a3a; letter-spacing: 0.02em; }
+.txproof code { background: rgba(19,17,16,0.06); padding: 3px 8px; color: var(--ink); }
+.txproof a { color: var(--red); margin-left: auto; }
 .notebox { margin-top: 14px; }
 .notebox .lbl { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--red); margin-bottom: 6px; }
 
