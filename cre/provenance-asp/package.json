@@ -1,0 +1,19 @@
+{
+  "name": "private-horse-provenance-asp",
+  "version": "1.0.0",
+  "main": "dist/main.js",
+  "private": true,
+  "description": "Private Horse CRE workflow — multi-source provenance, DON consensus, append-only ASP root -> Solana",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@chainlink/cre-sdk": "^1.23.0",
+    "poseidon-lite": "^0.3.0"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@types/node": "^22.0.0"
+  }
+}

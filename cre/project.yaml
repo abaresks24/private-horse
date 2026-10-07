@@ -1,0 +1,13 @@
+# CRE project settings — Private Horse provenance / ASP oracle.
+# The DON reads deposits from the Solana program, traces provenance, reaches
+# consensus on the append-only clean-set Merkle root, and writes it on-chain.
+
+staging-settings:
+  rpcs:
+    - chain-name: solana-devnet
+      url: https://api.devnet.solana.com
+
+production-settings:
+  rpcs:
+    - chain-name: solana-devnet
+      url: https://api.devnet.solana.com

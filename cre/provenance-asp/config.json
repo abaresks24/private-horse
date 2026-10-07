@@ -1,0 +1,11 @@
+{
+  "schedule": "*/30 * * * * *",
+  "programId": "4R4FwpZK1Tj9wAFnyfx17bDTa14hKEoLc5dhjsHhtA1X",
+  "poolPda": "GSrs6STYjXULpMkRjbEHPwQrsjgZb2FYWx5ArsNKvGGN",
+  "quorum": 2,
+  "sources": [
+    { "name": "trace", "url": "http://localhost:8787/trace?address=" },
+    { "name": "ofac", "url": "http://localhost:8787/ofac?address=" },
+    { "name": "hacks", "url": "http://localhost:8787/hacks?address=" }
+  ]
+}
