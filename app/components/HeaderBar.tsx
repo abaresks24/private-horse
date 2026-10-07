@@ -14,12 +14,12 @@ const EXPLORER = "https://explorer.solana.com/address/4R4FwpZK1Tj9wAFnyfx17bDTa1
 export default function HeaderBar() {
   const landing = usePathname() === "/";
 
-  // Landing: no bar — just the logo (white) top-left and connect-wallet top-right.
+  // Landing: no bar — just the dark logo top-left and connect-wallet top-right, on beige paper.
   if (landing) {
     return (
       <header className="site landing-head">
-        <a href="/" className="brand" style={{ color: "#fff" }}>
-          <HorseMark size={26} src="/logo-white.png" />
+        <a href="/" className="brand">
+          <HorseMark size={26} src="/logo.png" />
           <span>Private&nbsp;Horse</span>
         </a>
         <div className="wallet-slot"><WalletMultiButton /></div>
