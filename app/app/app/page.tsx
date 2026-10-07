@@ -6,7 +6,7 @@ import { LoaderOverlay } from "../../components/Loader";
 import { newNote, serializeNote, parseNote } from "../../lib/notes";
 import {
   getProgram, depositBatch, provenanceCheck, proveWithdraw, withdraw, proveRagequit, ragequit,
-  pool, freshRecipient, MOCK_URL,
+  pool, freshRecipient,
 } from "../../lib/protocol";
 
 const tx = (s: string) => `https://explorer.solana.com/tx/${s}?cluster=devnet`;
@@ -169,45 +169,8 @@ export default function AppPage() {
             </div>
           )}
         </div>
-
-        <div className="poolstrip">
-          <span><b>{poolInfo ? denomSol : "—"}</b> SOL denom</span>
-          <span><b>{poolInfo ? poolInfo.nextIndex.toString() : "—"}</b> deposits</span>
-          <span>DON epoch <b>{poolInfo ? poolInfo.aspEpoch.toString() : "—"}</b></span>
-          <span className="rootcell">ASP root <b>{poolInfo ? poolInfo.aspRoot.slice(0, 10) + "…" : "—"}</b></span>
-        </div>
-
-        <details className="demobox">
-          <summary>Demo · DON provenance gatekeeper</summary>
-          <ProvenanceControl />
-        </details>
       </div>
     </section>
-  );
-}
-
-function ProvenanceControl() {
-  const SOURCES = ["trace", "ofac", "hacks"] as const;
-  const [addr, setAddr] = useState("");
-  const [dirty, setDirty] = useState<string[]>([]);
-  const [up, setUp] = useState<boolean | null>(null);
-  async function flip(s: string) {
-    try { const r = await fetch(`${MOCK_URL}/flip?address=${addr}&source=${s}`, { method: "POST" }); const j = await r.json(); setDirty(j.dirtyOn ?? []); setUp(true); } catch { setUp(false); }
-  }
-  const clean = SOURCES.length - dirty.length;
-  return (
-    <div className="donpanel">
-      <p>
-        Flip provenance sources for a depositor; the DON applies a 2-of-3 quorum to decide whether the
-        address enters the clean set.
-        {up === false && <span style={{ color: "#ff8f80" }}> — mock offline: run <code>npx ts-node scripts/provenance-mock-server.ts</code></span>}
-      </p>
-      <input className="field" placeholder="depositor address" value={addr} onChange={(e) => setAddr(e.target.value)} />
-      <div style={{ display: "flex", gap: 10, margin: "14px 0 16px", flexWrap: "wrap" }}>
-        {SOURCES.map((s) => { const d = dirty.includes(s); return <button key={s} onClick={() => flip(s)} className="src" style={{ background: d ? "#2a0d0a" : "#0e2a16", color: d ? "#ff8f80" : "#8fd49a", borderColor: d ? "#5a1a14" : "#1c4a2b" }}>{s}: <b>{d ? "DIRTY" : "clean"}</b></button>; })}
-      </div>
-      <div className="consensus" style={{ color: clean >= 2 ? "#8fd49a" : "#ff8f80" }}>consensus: {clean}/3 clean → {clean >= 2 ? "CLEAN (admitted to ASP root)" : "DIRTY (ragequit only)"}</div>
-    </div>
   );
 }
 

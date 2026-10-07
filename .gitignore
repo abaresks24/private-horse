@@ -27,3 +27,4 @@ cre-solana-key.json
 # the front needs its proving artifacts committed (override the global *.zkey ignore)
 !app/public/circuits/
 !app/public/circuits/*.zkey
+.vercel
