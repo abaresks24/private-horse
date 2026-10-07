@@ -3,11 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useConnection, useWallet, useAnchorWallet } from "@solana/wallet-adapter-react";
 import { LoaderOverlay } from "../../components/Loader";
-import { newNote, serializeNote, parseNote } from "../../lib/notes";
 import {
   getProgram, depositBatch, provenanceCheck, proveWithdraw, withdraw, proveRagequit, ragequit,
   pool, freshRecipient,
 } from "../../lib/protocol";
+import { DERIVATION_MESSAGE, freeNotes, discoverDeposits, type MyDeposit } from "../../lib/account";
 
 const tx = (s: string) => `https://explorer.solana.com/tx/${s}?cluster=devnet`;
 const short = (s: string) => s.slice(0, 7) + "…" + s.slice(-7);
@@ -25,7 +25,7 @@ type Prov = { up: boolean; votes: number; total: number; quorum: number };
 
 export default function AppPage() {
   const { connection } = useConnection();
-  const { publicKey, connected, signAllTransactions } = useWallet();
+  const { publicKey, connected, signAllTransactions, signMessage } = useWallet();
   const anchorWallet = useAnchorWallet();
   const program = useMemo(() => (anchorWallet ? getProgram(connection, anchorWallet) : null), [connection, anchorWallet]);
 
@@ -34,16 +34,16 @@ export default function AppPage() {
   const [busy, setBusy] = useState("");
   const [log, setLog] = useState<{ kind: "ok" | "err"; msg: string; sigs?: string[] } | null>(null);
 
-  // deposit (mix) state
   const [amount, setAmount] = useState("0.5");
-  const [notes, setNotes] = useState<string[]>([]);
   const [prov, setProv] = useState<Prov | null>(null);
 
-  // withdraw state
-  const [note, setNote] = useState("");
+  // derived "account": the wallet signature is the seed — nothing to store.
+  const [seed, setSeed] = useState<Uint8Array | null>(null);
+  const [myDeposits, setMyDeposits] = useState<MyDeposit[] | null>(null);
 
   async function refresh() { try { const acc = await connection.getAccountInfo(pool()); if (acc) setPoolInfo(decodePool(new Uint8Array(acc.data))); } catch { /* */ } }
   useEffect(() => { refresh(); const t = setInterval(refresh, 8000); return () => clearInterval(t); }, [connection]);
+  useEffect(() => { setSeed(null); setMyDeposits(null); }, [publicKey]);
 
   const denom = poolInfo ? poolInfo.denomination : 100_000_000n;
   const denomSol = Number(denom) / 1e9;
@@ -52,7 +52,6 @@ export default function AppPage() {
   const chunks = amt > 0 ? Math.max(1, Math.round(amt / denomSol)) : 0;
   const total = chunks * denomSol;
 
-  // advisory provenance pre-check on the connected wallet
   useEffect(() => {
     if (!publicKey) { setProv(null); return; }
     let live = true;
@@ -62,30 +61,74 @@ export default function AppPage() {
 
   const provBlocked = !!prov && prov.up && prov.votes < prov.quorum;
 
+  async function ensureSeed(): Promise<Uint8Array> {
+    if (seed) return seed;
+    if (!signMessage) throw new Error("This wallet can't sign messages — use Phantom or Solflare.");
+    const sig = await signMessage(DERIVATION_MESSAGE);
+    setSeed(sig);
+    return sig;
+  }
+
   async function onMix() {
     if (!program || !publicKey || !signAllTransactions || chunks < 1) return;
-    setBusy(`Depositing 0/${chunks}`); setLog(null); setNotes([]);
+    setLog(null);
     try {
-      const ns = Array.from({ length: chunks }, () => newNote(denom));
+      setBusy("Sign to derive your keys");
+      const s = await ensureSeed();
+      setBusy("Preparing deposits");
+      const ns = await freeNotes(connection, s, denom, chunks);
       const sigs = await depositBatch(program, connection, publicKey, signAllTransactions, ns,
         (done, totalN) => setBusy(`Depositing ${done}/${totalN}`));
-      setNotes(ns.map(serializeNote));
-      setLog({ kind: "ok", msg: `Mixed ${total.toFixed(2)} SOL as ${chunks} × ${sol(denom)} — one signature.`, sigs });
+      setLog({ kind: "ok", msg: `Mixed ${total.toFixed(2)} SOL as ${chunks} × ${sol(denom)}. Nothing to save — reconnect and sign to withdraw.`, sigs });
       refresh();
     } catch (e: any) { setLog({ kind: "err", msg: e.message }); } finally { setBusy(""); }
   }
 
-  async function onWithdraw() {
-    if (!program || !publicKey) return;
-    setBusy("Proving in-browser & withdrawing"); setLog(null);
-    try { const n = parseNote(note.trim()); const r = freshRecipient(); const { proof, auditorCt } = await proveWithdraw(connection, n, r); const sig = await withdraw(program, publicKey, proof, r, auditorCt); setLog({ kind: "ok", msg: `Withdrawn privately → fresh address ${r.toBase58().slice(0, 8)}…`, sigs: [sig] }); refresh(); }
-    catch (e: any) { setLog({ kind: "err", msg: friendly(e.message) }); } finally { setBusy(""); }
+  async function onLoad() {
+    if (!publicKey) return;
+    setLog(null);
+    try {
+      setBusy("Sign to load your deposits");
+      const s = await ensureSeed();
+      setBusy("Scanning the chain");
+      const mine = await discoverDeposits(connection, s, denom);
+      setMyDeposits(mine);
+      if (!mine.length) setLog({ kind: "err", msg: "No deposits found for this wallet yet." });
+    } catch (e: any) { setLog({ kind: "err", msg: e.message }); } finally { setBusy(""); }
   }
-  async function onRagequit() {
-    if (!program || !publicKey) return;
-    setBusy("Proving & ragequitting"); setLog(null);
-    try { const n = parseNote(note.trim()); const r = await proveRagequit(connection, n); const sig = await ragequit(program, publicKey, r); setLog({ kind: "ok", msg: `Ragequit → original address ${r.depositor.toBase58().slice(0, 8)}… (public)`, sigs: [sig] }); refresh(); }
-    catch (e: any) { setLog({ kind: "err", msg: friendly(e.message) }); } finally { setBusy(""); }
+
+  const avail = (myDeposits ?? []).filter((d) => !d.spent);
+  const spentCount = (myDeposits ?? []).length - avail.length;
+
+  async function onWithdrawAll() {
+    if (!program || !publicKey || !avail.length) return;
+    setLog(null);
+    const sigs: string[] = [];
+    try {
+      for (let k = 0; k < avail.length; k++) {
+        setBusy(`Proving & withdrawing ${k + 1}/${avail.length}`);
+        const r = freshRecipient();
+        const { proof, auditorCt } = await proveWithdraw(connection, avail[k].note, r);
+        sigs.push(await withdraw(program, publicKey, proof, r, auditorCt));
+      }
+      setLog({ kind: "ok", msg: `Withdrew ${avail.length} × ${sol(denom)} privately → fresh addresses.`, sigs });
+      const s = await ensureSeed(); setMyDeposits(await discoverDeposits(connection, s, denom)); refresh();
+    } catch (e: any) { setLog({ kind: "err", msg: friendly(e.message) }); } finally { setBusy(""); }
+  }
+
+  async function onRagequitAll() {
+    if (!program || !publicKey || !avail.length) return;
+    setLog(null);
+    const sigs: string[] = [];
+    try {
+      for (let k = 0; k < avail.length; k++) {
+        setBusy(`Ragequitting ${k + 1}/${avail.length}`);
+        const r = await proveRagequit(connection, avail[k].note);
+        sigs.push(await ragequit(program, publicKey, r));
+      }
+      setLog({ kind: "ok", msg: `Ragequit ${avail.length} × ${sol(denom)} → origin (public).`, sigs });
+      const s = await ensureSeed(); setMyDeposits(await discoverDeposits(connection, s, denom)); refresh();
+    } catch (e: any) { setLog({ kind: "err", msg: friendly(e.message) }); } finally { setBusy(""); }
   }
 
   return (
@@ -123,27 +166,41 @@ export default function AppPage() {
                   {!prov.up
                     ? "Provenance service offline — deposit allowed (advisory check skipped)"
                     : provBlocked
-                      ? `⚠ Your funds trace clean on only ${prov.votes}/${prov.total} sources (need ${prov.quorum}). Mixing may not pass the DON clean set.`
+                      ? `⚠ Your funds trace clean on only ${prov.votes}/${prov.total} sources (need ${prov.quorum}).`
                       : `✓ Your funds trace clean on ${prov.votes}/${prov.total} sources — provenance validated by the DON`}
                 </div>
               )}
 
               <button className="bigbtn" disabled={!connected || !!busy || chunks < 1 || provBlocked} onClick={onMix}>
-                {!connected ? "Connect wallet to mix" : provBlocked ? "Provenance not validated" : `Mix ${total.toFixed(2)} SOL · 1 signature`}
+                {!connected ? "Connect wallet to mix" : provBlocked ? "Provenance not validated" : `Mix ${total.toFixed(2)} SOL`}
               </button>
-              <p className="fineprint">One wallet approval signs all {chunks || "N"} deposits; they broadcast in sequence. You receive {chunks || "N"} secret notes.</p>
+              <p className="fineprint">Sign once to derive your private keys, then approve the {chunks || "N"} deposits. Nothing to save — your wallet is the backup.</p>
             </>
           ) : (
             <>
-              <label className="amountbox">
-                <span className="amt-lbl">Your note</span>
-                <textarea className="notefield" rows={3} placeholder="horse-… (paste one secret note)" value={note} onChange={(e) => setNote(e.target.value)} />
-              </label>
-              <button className="bigbtn" disabled={!connected || !!busy || !note} onClick={onWithdraw}>
-                {!connected ? "Connect wallet to withdraw" : "Prove & withdraw privately"}
-              </button>
-              <button className="linkbtn" disabled={!connected || !!busy || !note} onClick={onRagequit}>Flagged out of the clean set? Ragequit to origin →</button>
-              <p className="fineprint">A Groth16 proof is built in your browser; funds land at a brand-new address, unlinkable to your deposit.</p>
+              {myDeposits === null ? (
+                <>
+                  <p className="fineprint" style={{ margin: "20px 2px 18px" }}>Your deposits are derived from your wallet — nothing to paste. Sign to load them.</p>
+                  <button className="bigbtn" disabled={!connected || !!busy} onClick={onLoad}>
+                    {!connected ? "Connect wallet" : "Load my deposits"}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="amountbox">
+                    <span className="amt-lbl">Withdrawable</span>
+                    <div className="amt-row">
+                      <span className="amt-input">{(avail.length * denomSol).toFixed(1)}</span>
+                      <span className="amt-unit">SOL</span>
+                    </div>
+                    <div className="splitline"><span>{avail.length} available</span><span className="split-val">{spentCount} already withdrawn</span></div>
+                  </div>
+                  <button className="bigbtn" disabled={!!busy || avail.length < 1} onClick={onWithdrawAll}>
+                    {avail.length < 1 ? "Nothing to withdraw" : `Withdraw ${(avail.length * denomSol).toFixed(1)} SOL privately`}
+                  </button>
+                  <button className="linkbtn" disabled={!!busy || avail.length < 1} onClick={onRagequitAll}>Flagged out of the clean set? Ragequit all to origin →</button>
+                </>
+              )}
             </>
           )}
 
@@ -161,13 +218,6 @@ export default function AppPage() {
               )}
             </div>
           )}
-
-          {notes.length > 0 && (
-            <div className="notebox">
-              <div className="lbl">Save these {notes.length} notes — each withdraws one {denomSol} SOL chunk</div>
-              <pre className="note">{notes.join("\n")}</pre>
-            </div>
-          )}
         </div>
       </div>
     </section>
@@ -175,8 +225,8 @@ export default function AppPage() {
 }
 
 function friendly(m: string) {
-  if (/not in tree|introuvable/.test(m)) return "This note isn't in the clean set (or not deposited yet). If flagged, use Ragequit.";
+  if (/not in tree|introuvable/.test(m)) return "This note isn't in the clean set yet. If flagged, use Ragequit.";
   if (/UnknownAspRoot|UnknownDepositRoot/.test(m)) return "Root not yet published on-chain — wait for the next CRE report, then retry.";
-  if (/already (in use|been)/.test(m)) return "This note was already spent.";
+  if (/already (in use|been)/.test(m)) return "Already spent.";
   return m;
 }
