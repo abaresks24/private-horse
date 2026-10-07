@@ -178,6 +178,18 @@ footer.site { padding: 36px 28px 80px; color: var(--taupe); font-family: var(--m
   filter: saturate(0); transform: rotate(-4deg);
 }
 .app-shell .wrap { position: relative; z-index: 1; }
+/* section tabs — editorial serif, red underline on active */
+.apptabs { display: flex; gap: 8px; border-bottom: 1px solid var(--line-strong); margin: 22px 0 38px; flex-wrap: wrap; }
+.apptab {
+  font-family: var(--serif); font-weight: 400; font-size: clamp(1.4rem, 3vw, 1.9rem); line-height: 1;
+  color: var(--taupe); background: none; border: 0; padding: 6px 20px 16px; cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s, border-color 0.15s;
+}
+.apptab:hover { color: var(--ink); }
+.apptab.active { color: var(--red); border-bottom-color: var(--red); }
+.section-pane { position: relative; }
+.section-title { font-family: var(--serif); font-weight: 400; font-size: clamp(2rem, 4.2vw, 3.1rem); line-height: 1.03; letter-spacing: -0.01em; color: var(--ink); margin: 0; }
+
 .app-head { max-width: 760px; margin-bottom: 34px; }
 .app-head .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--red); margin: 0 0 14px; display: flex; align-items: center; gap: 10px; }
 .app-head .kicker .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); display: inline-block; }

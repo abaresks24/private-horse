@@ -6,10 +6,36 @@ import { LoaderOverlay } from "../../components/Loader";
 import { newNote, serializeNote, parseNote } from "../../lib/notes";
 import {
   getProgram, deposit, proveWithdraw, withdraw, proveRagequit, ragequit,
-  pool, freshRecipient, MOCK_URL,
+  pool, freshRecipient, MOCK_URL, fetchWithdrawals, auditDecrypt, type AuditRow,
 } from "../../lib/protocol";
+import { DEMO_AUDITOR_PRIV } from "../../lib/auditor";
 
 const tx = (s: string) => `https://explorer.solana.com/tx/${s}?cluster=devnet`;
+const short = (s: string) => s.slice(0, 6) + "…" + s.slice(-6);
+
+type Tab = "horse" | "auditor" | "docs";
+
+export default function AppPage() {
+  const [tab, setTab] = useState<Tab>("horse");
+  return (
+    <section className="app-shell">
+      <div className="wrap">
+        <p className="kicker"><span className="dot" /> Private Horse · Solana devnet</p>
+        <nav className="apptabs" role="tablist">
+          <button className={`apptab${tab === "horse" ? " active" : ""}`} onClick={() => setTab("horse")}>Horse</button>
+          <button className={`apptab${tab === "auditor" ? " active" : ""}`} onClick={() => setTab("auditor")}>Auditor key</button>
+          <button className={`apptab${tab === "docs" ? " active" : ""}`} onClick={() => setTab("docs")}>Docs</button>
+        </nav>
+
+        {tab === "horse" && <HorseSection />}
+        {tab === "auditor" && <AuditorSection />}
+        {tab === "docs" && <DocsSection />}
+      </div>
+    </section>
+  );
+}
+
+/* ============================ HORSE — the pool ============================ */
 
 const OFF = { denomination: 136, nextIndex: 144, aspRoots: 1312, aspRootIndex: 1824, aspEpoch: 1832 };
 function decodePool(data: Uint8Array) {
@@ -20,7 +46,7 @@ function decodePool(data: Uint8Array) {
   return { denomination: u64(OFF.denomination), nextIndex: u64(OFF.nextIndex), aspEpoch: u64(OFF.aspEpoch), aspRoot: "0x" + hex(data.slice(OFF.aspRoots + idx * 32, OFF.aspRoots + idx * 32 + 32)) };
 }
 
-export default function AppPage() {
+function HorseSection() {
   const { connection } = useConnection();
   const { publicKey, connected } = useWallet();
   const anchorWallet = useAnchorWallet();
@@ -34,11 +60,12 @@ export default function AppPage() {
   async function refresh() { try { const acc = await connection.getAccountInfo(pool()); if (acc) setPoolInfo(decodePool(new Uint8Array(acc.data))); } catch { /* */ } }
   useEffect(() => { refresh(); const t = setInterval(refresh, 8000); return () => clearInterval(t); }, [connection]);
   const denom = poolInfo ? poolInfo.denomination : 300_000_000n;
+  const sol = (v: bigint) => `${Number(v) / 1e9} SOL`;
 
   async function onDeposit() {
     if (!program || !publicKey) return;
     setBusy("Depositing"); setLog(null);
-    try { const n = newNote(denom); const sig = await deposit(program, publicKey, n); setNote(serializeNote(n)); setLog({ kind: "ok", msg: `Deposited ${Number(denom) / 1e9} SOL. SAVE your note below.`, sig }); refresh(); }
+    try { const n = newNote(denom); const sig = await deposit(program, publicKey, n); setNote(serializeNote(n)); setLog({ kind: "ok", msg: `Deposited ${sol(denom)}. SAVE your note below.`, sig }); refresh(); }
     catch (e: any) { setLog({ kind: "err", msg: e.message }); } finally { setBusy(""); }
   }
   async function onWithdraw() {
@@ -54,69 +81,64 @@ export default function AppPage() {
     catch (e: any) { setLog({ kind: "err", msg: friendly(e.message) }); } finally { setBusy(""); }
   }
 
-  const sol = (v: bigint) => `${Number(v) / 1e9} SOL`;
-
   return (
-    <section className="app-shell">
+    <div className="section-pane">
       <LoaderOverlay hidden={!busy} label={busy || "Working"} />
-      <div className="wrap">
-        <header className="app-head">
-          <p className="kicker"><span className="dot" /> Privacy pool · Solana devnet</p>
-          <h1 className="app-title">Deposit. Withdraw privately. Ragequit.</h1>
-          <p className="app-sub">
-            Lock a fixed denomination, prove membership of the CRE-maintained clean set in your
-            browser, and withdraw to a fresh address. No operator ever learns the link between your
-            deposit and your withdrawal.
-          </p>
-        </header>
+      <header className="app-head">
+        <h2 className="section-title">Deposit. Withdraw privately. Ragequit.</h2>
+        <p className="app-sub">
+          Lock a fixed denomination, prove membership of the CRE-maintained clean set in your
+          browser, and withdraw to a fresh address. No operator ever learns the link between your
+          deposit and your withdrawal.
+        </p>
+      </header>
 
-        <div className="poolbar">
-          <div className="pcell"><div className="pk">Denomination</div><div className="pv">{poolInfo ? sol(poolInfo.denomination) : "—"}</div></div>
-          <div className="pcell"><div className="pk">Deposits</div><div className="pv">{poolInfo ? poolInfo.nextIndex.toString() : "—"}</div></div>
-          <div className="pcell"><div className="pk">ASP epoch · DON</div><div className="pv">{poolInfo ? poolInfo.aspEpoch.toString() : "—"}</div></div>
-          <div className="pcell"><div className="pk">ASP root</div><div className="pv">{poolInfo ? poolInfo.aspRoot.slice(0, 12) + "…" : "—"}</div></div>
-        </div>
-
-        {!connected && <div className="connect-note">Connect a devnet wallet (Phantom / Solflare) — top&nbsp;right — to deposit and withdraw.</div>}
-
-        <div className="appgrid">
-          <div className="actcard">
-            <span className="num">01</span>
-            <h3>Deposit</h3>
-            <p>Lock {sol(denom)} into the pool. You receive a secret note — keep it safe, it&apos;s the only way to withdraw.</p>
-            <button className="btn" disabled={!connected || !!busy} onClick={onDeposit}>Deposit {sol(denom)}</button>
-          </div>
-          <div className="actcard">
-            <span className="num">02</span>
-            <h3>Withdraw privately</h3>
-            <p>Paste your note. A Groth16 proof is built in-browser; funds land at a brand-new address, unlinkable to your deposit.</p>
-            <textarea className="field" rows={2} placeholder="horse-… (your secret note)" value={note} onChange={(e) => setNote(e.target.value)} />
-            <button className="btn" disabled={!connected || !!busy || !note} onClick={onWithdraw}>Prove &amp; withdraw</button>
-          </div>
-          <div className="actcard">
-            <span className="num">03</span>
-            <h3>Ragequit</h3>
-            <p>Flagged out of the clean set? Recover your funds to your original address — public, but always available.</p>
-            <button className="btn ghost" disabled={!connected || !!busy || !note} onClick={onRagequit}>Ragequit to origin</button>
-          </div>
-        </div>
-
-        {log && (
-          <div className={`receipt ${log.kind}`}>
-            {log.msg}
-            {log.sig && <a href={tx(log.sig)} target="_blank" rel="noreferrer">view tx ↗</a>}
-          </div>
-        )}
-        {note && (
-          <div className="notebox">
-            <div className="lbl">Your note — copy &amp; keep this</div>
-            <pre className="note">{note}</pre>
-          </div>
-        )}
-
-        <ProvenanceControl />
+      <div className="poolbar">
+        <div className="pcell"><div className="pk">Denomination</div><div className="pv">{poolInfo ? sol(poolInfo.denomination) : "—"}</div></div>
+        <div className="pcell"><div className="pk">Deposits</div><div className="pv">{poolInfo ? poolInfo.nextIndex.toString() : "—"}</div></div>
+        <div className="pcell"><div className="pk">ASP epoch · DON</div><div className="pv">{poolInfo ? poolInfo.aspEpoch.toString() : "—"}</div></div>
+        <div className="pcell"><div className="pk">ASP root</div><div className="pv">{poolInfo ? poolInfo.aspRoot.slice(0, 12) + "…" : "—"}</div></div>
       </div>
-    </section>
+
+      {!connected && <div className="connect-note">Connect a devnet wallet (Phantom / Solflare) — top&nbsp;right — to deposit and withdraw.</div>}
+
+      <div className="appgrid">
+        <div className="actcard">
+          <span className="num">01</span>
+          <h3>Deposit</h3>
+          <p>Lock {sol(denom)} into the pool. You receive a secret note — keep it safe, it&apos;s the only way to withdraw.</p>
+          <button className="btn" disabled={!connected || !!busy} onClick={onDeposit}>Deposit {sol(denom)}</button>
+        </div>
+        <div className="actcard">
+          <span className="num">02</span>
+          <h3>Withdraw privately</h3>
+          <p>Paste your note. A Groth16 proof is built in-browser; funds land at a brand-new address, unlinkable to your deposit.</p>
+          <textarea className="field" rows={2} placeholder="horse-… (your secret note)" value={note} onChange={(e) => setNote(e.target.value)} />
+          <button className="btn" disabled={!connected || !!busy || !note} onClick={onWithdraw}>Prove &amp; withdraw</button>
+        </div>
+        <div className="actcard">
+          <span className="num">03</span>
+          <h3>Ragequit</h3>
+          <p>Flagged out of the clean set? Recover your funds to your original address — public, but always available.</p>
+          <button className="btn ghost" disabled={!connected || !!busy || !note} onClick={onRagequit}>Ragequit to origin</button>
+        </div>
+      </div>
+
+      {log && (
+        <div className={`receipt ${log.kind}`}>
+          {log.msg}
+          {log.sig && <a href={tx(log.sig)} target="_blank" rel="noreferrer">view tx ↗</a>}
+        </div>
+      )}
+      {note && (
+        <div className="notebox">
+          <div className="lbl">Your note — copy &amp; keep this</div>
+          <pre className="note">{note}</pre>
+        </div>
+      )}
+
+      <ProvenanceControl />
+    </div>
   );
 }
 
@@ -152,4 +174,122 @@ function friendly(m: string) {
   if (/UnknownAspRoot|UnknownDepositRoot/.test(m)) return "Root not yet published on-chain — wait for the next CRE report, then retry.";
   if (/already (in use|been)/.test(m)) return "This note was already spent.";
   return m;
+}
+
+/* ============================ AUDITOR KEY ============================ */
+
+function AuditorSection() {
+  const { connection } = useConnection();
+  const [key, setKey] = useState("");
+  const [busy, setBusy] = useState("");
+  const [rows, setRows] = useState<{ row: AuditRow; depositor?: string }[]>([]);
+  const [err, setErr] = useState("");
+
+  async function onAudit() {
+    setErr(""); setBusy("Reading withdrawals & decrypting");
+    try {
+      const priv = BigInt(key.trim());
+      const withdrawals = await fetchWithdrawals(connection);
+      const out = [];
+      for (const row of withdrawals) {
+        let depositor: string | undefined;
+        try { depositor = await auditDecrypt(row.auditorCt, priv); } catch { /* wrong key / empty ct */ }
+        out.push({ row, depositor });
+      }
+      setRows(out);
+      if (!out.length) setErr("No withdrawals found yet on devnet.");
+    } catch (e: any) { setErr(e.message); } finally { setBusy(""); }
+  }
+
+  return (
+    <div className="section-pane">
+      <LoaderOverlay hidden={!busy} label={busy || "Working"} />
+      <header className="app-head">
+        <h2 className="section-title">See the real address behind a private withdrawal.</h2>
+        <p className="app-sub">
+          Each private withdrawal encrypts its <strong>original depositor address</strong> to the
+          auditor&apos;s key. The recipient is already public; the link to the real identity is not —
+          unless you hold the auditor key. Paste it to reveal that link, one transaction at a time.
+        </p>
+      </header>
+
+      <input className="field" placeholder="auditor private key (0x…)" value={key} onChange={(e) => setKey(e.target.value)} />
+      <div style={{ display: "flex", gap: 12, margin: "12px 0 6px", flexWrap: "wrap" }}>
+        <button className="btn" disabled={!!busy || !key} onClick={onAudit}>Decrypt withdrawals</button>
+        <button className="btn ghost" onClick={() => setKey(DEMO_AUDITOR_PRIV)}>Use demo auditor key</button>
+      </div>
+      {err && <p className="mono" style={{ color: "#a40000" }}>{err}</p>}
+
+      {rows.length > 0 && (
+        <table className="audit">
+          <thead><tr><th>Tx</th><th>Public recipient</th><th>Original depositor (decrypted)</th></tr></thead>
+          <tbody>
+            {rows.map(({ row, depositor }, i) => (
+              <tr key={i}>
+                <td><a href={tx(row.sig)} target="_blank" rel="noreferrer">{short(row.sig)} ↗</a></td>
+                <td className="mono">{short(row.recipient)}</td>
+                <td className="mono" style={{ color: depositor ? "var(--red)" : "var(--taupe)" }}>{depositor ? short(depositor) : "— (wrong key / legacy)"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      <p className="muted" style={{ marginTop: 26, fontSize: 13, maxWidth: "64ch" }}>
+        Selective disclosure by exception: the auditor key reveals the depositor↔withdrawal link for
+        compliance, without weakening everyone else&apos;s privacy. Decryption is trustworthy for
+        withdrawals made by this app.
+      </p>
+    </div>
+  );
+}
+
+/* ============================ DOCS ============================ */
+
+function DocsSection() {
+  return (
+    <div className="section-pane">
+      <header className="app-head">
+        <h2 className="section-title">How Private Horse works.</h2>
+        <p className="app-sub">The short version. Full write-up lives on the <a href="/docs">docs page</a>.</p>
+      </header>
+
+      <div className="doc" style={{ maxWidth: "72ch" }}>
+        <h3>1 · Deposit into a fixed denomination</h3>
+        <p>
+          Every deposit locks the same amount and commits a Poseidon hash of a secret note. Fixed
+          denominations are what make withdrawals indistinguishable — a varying amount would link a
+          withdrawal back to its deposit.
+        </p>
+
+        <h3>2 · The clean set, maintained by a Chainlink CRE DON</h3>
+        <p>
+          A decentralized oracle network traces each depositor&apos;s provenance across multiple
+          sources (sanctions / hacks / tracing), applies a 2-of-3 quorum, and publishes an
+          <strong> append-only</strong> Association-Set Merkle root on-chain. No single operator can
+          whitelist or censor an address, and a deposit that was ever clean stays provable forever.
+        </p>
+
+        <h3>3 · Withdraw with a zero-knowledge proof</h3>
+        <p>
+          In your browser, a Groth16 proof shows your note is in the clean set and hasn&apos;t been
+          spent — without revealing which deposit is yours. Funds go to a fresh address, unlinkable
+          to the deposit.
+        </p>
+
+        <h3>4 · Ragequit — the anti-freeze guarantee</h3>
+        <p>
+          If your deposit is flagged out of the clean set, you can always recover your funds to your
+          original (public) address. You are never trapped.
+        </p>
+
+        <h3>5 · Auditor key — disclosure by exception</h3>
+        <p>
+          Each withdrawal encrypts the original depositor address to an auditor key. Compliance can
+          reveal the link one transaction at a time, without breaking privacy for anyone else. Try it
+          in the <strong>Auditor key</strong> tab.
+        </p>
+      </div>
+    </div>
+  );
 }
