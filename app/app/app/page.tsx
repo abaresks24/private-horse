@@ -54,42 +54,65 @@ export default function AppPage() {
     catch (e: any) { setLog({ kind: "err", msg: friendly(e.message) }); } finally { setBusy(""); }
   }
 
+  const sol = (v: bigint) => `${Number(v) / 1e9} SOL`;
+
   return (
-    <section className="band">
+    <section className="app-shell">
       <LoaderOverlay hidden={!busy} label={busy || "Working"} />
       <div className="wrap">
-        <h1 className="display h-l">Deposit, withdraw privately, ragequit.</h1>
+        <header className="app-head">
+          <p className="kicker"><span className="dot" /> Privacy pool · Solana devnet</p>
+          <h1 className="app-title">Deposit. Withdraw privately. Ragequit.</h1>
+          <p className="app-sub">
+            Lock a fixed denomination, prove membership of the CRE-maintained clean set in your
+            browser, and withdraw to a fresh address. No operator ever learns the link between your
+            deposit and your withdrawal.
+          </p>
+        </header>
 
-        <div className="statgrid" style={{ margin: "28px 0 32px" }}>
-          <Stat k="Denomination" v={poolInfo ? `${Number(poolInfo.denomination) / 1e9} SOL` : "…"} />
-          <Stat k="Deposits" v={poolInfo ? poolInfo.nextIndex.toString() : "…"} />
-          <Stat k="ASP epoch (DON)" v={poolInfo ? poolInfo.aspEpoch.toString() : "…"} />
-          <Stat k="ASP root" v={poolInfo ? poolInfo.aspRoot.slice(0, 14) + "…" : "…"} />
+        <div className="poolbar">
+          <div className="pcell"><div className="pk">Denomination</div><div className="pv">{poolInfo ? sol(poolInfo.denomination) : "—"}</div></div>
+          <div className="pcell"><div className="pk">Deposits</div><div className="pv">{poolInfo ? poolInfo.nextIndex.toString() : "—"}</div></div>
+          <div className="pcell"><div className="pk">ASP epoch · DON</div><div className="pv">{poolInfo ? poolInfo.aspEpoch.toString() : "—"}</div></div>
+          <div className="pcell"><div className="pk">ASP root</div><div className="pv">{poolInfo ? poolInfo.aspRoot.slice(0, 12) + "…" : "—"}</div></div>
         </div>
 
-        {!connected && <p className="muted" style={{ marginBottom: 20 }}>Connect a devnet wallet (Phantom / Solflare) to deposit and withdraw.</p>}
+        {!connected && <div className="connect-note">Connect a devnet wallet (Phantom / Solflare) — top&nbsp;right — to deposit and withdraw.</div>}
 
         <div className="appgrid">
           <div className="actcard">
-            <h3>1 · Deposit</h3>
-            <p className="muted">Lock {Number(denom) / 1e9} SOL. You get a secret note — keep it to withdraw later.</p>
-            <button className="btn" disabled={!connected || !!busy} onClick={onDeposit}>Deposit {Number(denom) / 1e9} SOL</button>
+            <span className="num">01</span>
+            <h3>Deposit</h3>
+            <p>Lock {sol(denom)} into the pool. You receive a secret note — keep it safe, it&apos;s the only way to withdraw.</p>
+            <button className="btn" disabled={!connected || !!busy} onClick={onDeposit}>Deposit {sol(denom)}</button>
           </div>
           <div className="actcard">
-            <h3>2 · Withdraw privately</h3>
-            <p className="muted">Paste your note. A Groth16 proof is built in your browser; funds go to a fresh address.</p>
-            <textarea className="field" rows={2} placeholder="sieve-… (your note)" value={note} onChange={(e) => setNote(e.target.value)} />
+            <span className="num">02</span>
+            <h3>Withdraw privately</h3>
+            <p>Paste your note. A Groth16 proof is built in-browser; funds land at a brand-new address, unlinkable to your deposit.</p>
+            <textarea className="field" rows={2} placeholder="horse-… (your secret note)" value={note} onChange={(e) => setNote(e.target.value)} />
             <button className="btn" disabled={!connected || !!busy || !note} onClick={onWithdraw}>Prove &amp; withdraw</button>
           </div>
           <div className="actcard">
-            <h3>3 · Ragequit</h3>
-            <p className="muted">Excluded from the clean set? Recover to your original address (public).</p>
-            <button className="btn ghost" disabled={!connected || !!busy || !note} onClick={onRagequit}>Ragequit</button>
+            <span className="num">03</span>
+            <h3>Ragequit</h3>
+            <p>Flagged out of the clean set? Recover your funds to your original address — public, but always available.</p>
+            <button className="btn ghost" disabled={!connected || !!busy || !note} onClick={onRagequit}>Ragequit to origin</button>
           </div>
         </div>
 
-        {log && <div className="logline" style={{ borderColor: log.kind === "ok" ? "var(--line-strong)" : "#c33", color: log.kind === "ok" ? "var(--ink)" : "#a40000" }}>{log.msg} {log.sig && <a href={tx(log.sig)} target="_blank" rel="noreferrer">view tx ↗</a>}</div>}
-        {note && <pre className="note" style={{ marginTop: 16 }}>your note (KEEP THIS): {note}</pre>}
+        {log && (
+          <div className={`receipt ${log.kind}`}>
+            {log.msg}
+            {log.sig && <a href={tx(log.sig)} target="_blank" rel="noreferrer">view tx ↗</a>}
+          </div>
+        )}
+        {note && (
+          <div className="notebox">
+            <div className="lbl">Your note — copy &amp; keep this</div>
+            <pre className="note">{note}</pre>
+          </div>
+        )}
 
         <ProvenanceControl />
       </div>
@@ -107,26 +130,22 @@ function ProvenanceControl() {
   }
   const clean = SOURCES.length - dirty.length;
   return (
-    <div style={{ marginTop: 46, borderTop: "1px solid var(--line)", paddingTop: 28 }}>
-      <p className="eyebrow">Demo control · the DON gatekeeper</p>
-      <p className="muted" style={{ maxWidth: "60ch", marginBottom: 14 }}>
-        Flip provenance sources for a depositor; the DON applies a 2-of-3 quorum to set the clean set.
-        {up === false && <span style={{ color: "#a40000" }}> — mock offline: run <code>npx ts-node scripts/provenance-mock-server.ts</code></span>}
+    <div className="donpanel">
+      <p className="kicker">Demo control · the DON gatekeeper</p>
+      <h3>Provenance consensus</h3>
+      <p>
+        Flip provenance sources for a depositor; the decentralized oracle network applies a 2-of-3
+        quorum to decide whether the address enters the clean set.
+        {up === false && <span style={{ color: "#ff8f80" }}> — mock offline: run <code>npx ts-node scripts/provenance-mock-server.ts</code></span>}
       </p>
-      <input className="field" placeholder="depositor address" value={addr} onChange={(e) => setAddr(e.target.value)} style={{ maxWidth: 520 }} />
-      <div style={{ display: "flex", gap: 10, margin: "12px 0", flexWrap: "wrap" }}>
-        {SOURCES.map((s) => { const d = dirty.includes(s); return <button key={s} onClick={() => flip(s)} className="src" style={{ background: d ? "#2a0d0a" : "#0e2a16", color: d ? "#ff8f80" : "#8fd49a" }}>{s}: <b>{d ? "DIRTY" : "clean"}</b></button>; })}
+      <input className="field" placeholder="depositor address" value={addr} onChange={(e) => setAddr(e.target.value)} />
+      <div style={{ display: "flex", gap: 10, margin: "14px 0 16px", flexWrap: "wrap" }}>
+        {SOURCES.map((s) => { const d = dirty.includes(s); return <button key={s} onClick={() => flip(s)} className="src" style={{ background: d ? "#2a0d0a" : "#0e2a16", color: d ? "#ff8f80" : "#8fd49a", borderColor: d ? "#5a1a14" : "#1c4a2b" }}>{s}: <b>{d ? "DIRTY" : "clean"}</b></button>; })}
       </div>
-      <div className="mono" style={{ color: clean >= 2 ? "var(--ink)" : "var(--red)" }}>consensus: {clean}/3 clean → {clean >= 2 ? "CLEAN (in ASP root)" : "DIRTY (ragequit only)"}</div>
+      <div className="consensus" style={{ color: clean >= 2 ? "#8fd49a" : "#ff8f80" }}>consensus: {clean}/3 clean → {clean >= 2 ? "CLEAN (admitted to ASP root)" : "DIRTY (ragequit only)"}</div>
     </div>
   );
 }
-
-const Stat = ({ k, v }: { k: string; v: string }) => (
-  <div className="stat" style={{ background: "var(--ink)", color: "var(--paper)", padding: 16 }}>
-    <div className="k">{k}</div><div className="v" style={{ color: "var(--paper)" }}>{v}</div>
-  </div>
-);
 
 function friendly(m: string) {
   if (/not in tree|introuvable/.test(m)) return "This note isn't in the clean set (or not deposited yet). If flagged, use Ragequit.";

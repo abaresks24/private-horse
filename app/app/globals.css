@@ -169,16 +169,60 @@ footer.site { padding: 36px 28px 80px; color: var(--taupe); font-family: var(--m
 .doc li { margin: 9px 0; }
 .doc code { font-family: var(--mono); font-size: 0.86em; background: rgba(19,17,16,0.07); padding: 1px 5px; border-radius: 2px; }
 
-/* ---- app panels ---- */
-.appgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-@media (max-width: 860px) { .appgrid { grid-template-columns: 1fr; } }
-.actcard { border: 1px solid var(--line-strong); padding: 22px; display: flex; flex-direction: column; gap: 10px; background: rgba(255,255,255,0.4); }
-.actcard h3 { font-family: var(--display); font-weight: 700; font-size: 1.12rem; margin: 0; letter-spacing: -0.01em; }
-.actcard p { margin: 0; font-size: 0.95rem; }
-.actcard .btn { margin-top: auto; }
+/* ---- app: protocol dashboard ---- */
+.app-shell { padding: 44px 0 110px; position: relative; }
+.app-shell::after { /* faint ghost-horse watermark, same motif as the landing */
+  content: ""; position: absolute; right: -4%; top: 60px; width: min(42vw, 520px); height: min(42vw, 520px);
+  z-index: 0; pointer-events: none; opacity: 0.035; background: url("/logo.png") center/contain no-repeat;
+  filter: saturate(0); transform: rotate(-4deg);
+}
+.app-shell .wrap { position: relative; z-index: 1; }
+.app-head { max-width: 760px; margin-bottom: 34px; }
+.app-head .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--red); margin: 0 0 14px; display: flex; align-items: center; gap: 10px; }
+.app-head .kicker .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); display: inline-block; }
+.app-title { font-family: var(--serif); font-weight: 400; font-size: clamp(2.2rem, 4.6vw, 3.5rem); line-height: 1.02; letter-spacing: -0.01em; color: var(--ink); margin: 0; }
+.app-sub { font-family: var(--sans); color: var(--ink-soft); font-size: 1.05rem; line-height: 1.6; margin: 14px 0 0; max-width: 62ch; }
+
+/* pool ticker */
+.poolbar { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line-strong); background: rgba(255,255,255,0.5); margin-bottom: 28px; }
+@media (max-width: 760px) { .poolbar { grid-template-columns: repeat(2, 1fr); } }
+.pcell { padding: 17px 20px; border-right: 1px solid var(--line); }
+.pcell:last-child { border-right: 0; }
+@media (max-width: 760px) { .pcell:nth-child(2n) { border-right: 0; } .pcell:nth-child(-n+2) { border-bottom: 1px solid var(--line); } }
+.pcell .pk { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--taupe); }
+.pcell .pv { font-family: var(--mono); font-size: 1.1rem; color: var(--ink); margin-top: 8px; word-break: break-all; }
+
+.connect-note { border-left: 2px solid var(--red); background: rgba(206,0,0,0.05); padding: 12px 16px; font-size: 0.95rem; color: var(--ink-soft); margin-bottom: 26px; }
+
+/* action cards */
+.appgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+@media (max-width: 920px) { .appgrid { grid-template-columns: 1fr; } }
+.actcard { position: relative; border: 1px solid var(--line-strong); padding: 24px 22px 22px; display: flex; flex-direction: column; gap: 11px; background: rgba(255,255,255,0.55); transition: border-color 0.15s; }
+.actcard:hover { border-color: var(--red); }
+.actcard .num { font-family: var(--serif); font-size: 2.1rem; line-height: 1; color: var(--red); }
+.actcard h3 { font-family: var(--display); font-weight: 600; font-size: 1.05rem; margin: 0; letter-spacing: -0.01em; color: var(--ink); }
+.actcard p { margin: 0; font-size: 0.9rem; color: var(--ink-soft); line-height: 1.55; }
+.actcard .field { margin: 2px 0 0; }
 .actcard textarea.field { resize: vertical; }
-.logline { margin-top: 22px; padding: 14px 16px; border: 1px solid var(--line-strong); font-family: var(--mono); font-size: 13px; line-height: 1.5; }
-.src { font-family: var(--mono); font-size: 12px; padding: 10px 14px; border: 1px solid var(--line-strong); cursor: pointer; }
+.actcard .btn { margin-top: auto; }
+
+/* receipt / log */
+.receipt { margin-top: 24px; padding: 15px 18px; border: 1px solid var(--line-strong); border-left-width: 3px; font-family: var(--mono); font-size: 13px; line-height: 1.55; }
+.receipt.ok { border-left-color: var(--ink); color: var(--ink); }
+.receipt.err { border-left-color: var(--red); color: var(--red-2); }
+.receipt a { color: var(--red); margin-left: 6px; }
+.notebox { margin-top: 14px; }
+.notebox .lbl { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--red); margin-bottom: 6px; }
+
+/* DON gatekeeper panel (dark) */
+.donpanel { margin-top: 48px; background: var(--ink); color: var(--paper); padding: 28px; }
+.donpanel .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #ff6a5a; margin: 0 0 10px; }
+.donpanel h3 { font-family: var(--serif); font-weight: 400; font-size: 1.55rem; margin: 0 0 8px; color: var(--paper); }
+.donpanel p { color: #c9c1b2; font-size: 0.95rem; max-width: 64ch; margin: 0 0 18px; }
+.donpanel .field { background: #1e1b19; border-color: #3a352f; color: var(--paper); max-width: 520px; }
+.donpanel code { background: rgba(255,255,255,0.08); color: #ffb3a8; padding: 1px 5px; }
+.consensus { font-family: var(--mono); font-size: 13px; margin-top: 4px; letter-spacing: 0.02em; }
+.src { font-family: var(--mono); font-size: 12px; padding: 10px 14px; border: 1px solid #3a352f; cursor: pointer; border-radius: 0; }
 
 /* auditor table */
 table.audit { width: 100%; border-collapse: collapse; margin-top: 24px; font-size: 14px; }

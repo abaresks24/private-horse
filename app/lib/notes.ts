@@ -44,7 +44,7 @@ export const toHex = (x: bigint) => "0x" + x.toString(16).padStart(64, "0");
 
 /** Serialize a note to a backup string the user must keep to withdraw later. */
 export const serializeNote = (n: Note) =>
-  `sieve-${n.secret.toString(16)}-${n.nullifier.toString(16)}-${n.amount.toString()}`;
+  `horse-${n.secret.toString(16)}-${n.nullifier.toString(16)}-${n.amount.toString()}`;
 
 export function parseNote(s: string): Note {
   const [, secret, nullifier, amount] = s.split("-");
