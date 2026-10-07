@@ -146,6 +146,11 @@ footer.site { padding: 36px 28px 80px; color: var(--taupe); font-family: var(--m
 .logline { margin-top: 22px; padding: 14px 16px; border: 1px solid var(--line-strong); font-family: var(--mono); font-size: 13px; line-height: 1.5; }
 .src { font-family: var(--mono); font-size: 12px; padding: 10px 14px; border: 1px solid var(--line-strong); cursor: pointer; }
 
+/* auditor table */
+table.audit { width: 100%; border-collapse: collapse; margin-top: 24px; font-size: 14px; }
+table.audit th { text-align: left; font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--taupe); border-bottom: 1px solid var(--line-strong); padding: 10px 12px; }
+table.audit td { padding: 12px; border-bottom: 1px solid var(--line); }
+
 /* wallet-adapter button -> DA */
 .wallet-adapter-button { background: var(--ink) !important; color: var(--paper) !important; font-family: var(--mono) !important; font-size: 12px !important; letter-spacing: 0.1em !important; text-transform: uppercase !important; border-radius: 0 !important; height: auto !important; padding: 13px 18px !important; line-height: 1 !important; }
 .wallet-adapter-button:not([disabled]):hover { background: var(--red) !important; }

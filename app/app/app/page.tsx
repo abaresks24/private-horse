@@ -45,7 +45,7 @@ export default function AppPage() {
   async function onWithdraw() {
     if (!program || !publicKey) return;
     setBusy("Proving in-browser & withdrawing"); setLog(null);
-    try { const n = parseNote(note.trim()); const r = freshRecipient(); const proof = await proveWithdraw(connection, n, r); const sig = await withdraw(program, publicKey, proof, r); setLog({ kind: "ok", msg: `Withdrawn PRIVATELY → fresh address ${r.toBase58().slice(0, 8)}…`, sig }); refresh(); }
+    try { const n = parseNote(note.trim()); const r = freshRecipient(); const { proof, auditorCt } = await proveWithdraw(connection, n, r); const sig = await withdraw(program, publicKey, proof, r, auditorCt); setLog({ kind: "ok", msg: `Withdrawn PRIVATELY → fresh address ${r.toBase58().slice(0, 8)}…`, sig }); refresh(); }
     catch (e: any) { setLog({ kind: "err", msg: friendly(e.message) }); } finally { setBusy(""); }
   }
   async function onRagequit() {

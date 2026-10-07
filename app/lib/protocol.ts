@@ -3,12 +3,15 @@
 // on-chain DepositRecords and the ASP (clean) tree by re-running the provenance check — matching
 // what the CRE keeper writes on-chain, so the proof's roots verify.
 
-import { AnchorProvider, Program, BN, type Idl } from "@coral-xyz/anchor";
+import { AnchorProvider, Program, BN, EventParser, type Idl } from "@coral-xyz/anchor";
 import { Connection, PublicKey, SystemProgram, Keypair } from "@solana/web3.js";
 import { buildPoseidon } from "circomlibjs";
 import idl from "./idl/sieve.json";
 import { prove, recipientField, type FormattedProof } from "./prover";
 import { commitment as noteCommitment, nullifierHash as noteNullifierHash, type Note } from "./notes";
+import { encrypt, decrypt, pubFromPriv, demoPriv, addressToFields, fieldsToAddressBytes, feToBytes as feBytes, bytesToFe, randScalar } from "./auditor";
+
+const ZERO_CT: number[][] = [Array(32).fill(0), Array(32).fill(0), Array(32).fill(0), Array(32).fill(0)];
 
 export const PROGRAM_ID = new PublicKey("4R4FwpZK1Tj9wAFnyfx17bDTa14hKEoLc5dhjsHhtA1X");
 export const DEVNET_RPC = "https://api.devnet.solana.com";
@@ -89,15 +92,15 @@ async function cleanSet(deposits: Deposit[]): Promise<bigint[]> {
   return clean;
 }
 
-/** Build the Groth16 withdraw proof for `note` paying `recipient`, against current on-chain state. */
-export async function proveWithdraw(connection: Connection, note: Note, recipient: PublicKey): Promise<FormattedProof> {
+/** Build the Groth16 withdraw proof + the auditor ciphertext (encrypts the ORIGINAL depositor). */
+export async function proveWithdraw(connection: Connection, note: Note, recipient: PublicKey): Promise<{ proof: FormattedProof; auditorCt: number[][] }> {
   const deposits = await fetchDeposits(connection);
   const c = await noteCommitment(note);
   const depTree = await MerkleTree.build(deposits.map((d) => d.commitment));
   const aspTree = await MerkleTree.build(await cleanSet(deposits));
   const dep = depTree.path(c), asp = aspTree.path(c);
   const recBytes = recipientField(recipient.toBytes());
-  return prove("withdraw", {
+  const proof = await prove("withdraw", {
     secret: note.secret.toString(), nullifier: note.nullifier.toString(), amount: note.amount.toString(),
     pathElementsDep: dep.pathElements.map(String), pathIndicesDep: dep.pathIndices,
     pathElementsAsp: asp.pathElements.map(String), pathIndicesAsp: asp.pathIndices,
@@ -105,6 +108,17 @@ export async function proveWithdraw(connection: Connection, note: Note, recipien
     nullifierHash: (await noteNullifierHash(note)).toString(),
     recipient: BigInt("0x" + Buffer.from(recBytes).toString("hex")).toString(),
   });
+
+  // Selective disclosure: encrypt the original depositor's address to the auditor key.
+  let auditorCt = ZERO_CT;
+  const mine = deposits.find((d) => d.commitment === c);
+  if (mine) {
+    const [hi, lo] = addressToFields(new PublicKey(mine.depositor).toBytes());
+    const pub = await pubFromPriv(demoPriv());
+    const packed = await encrypt([hi, lo], pub, randScalar());
+    auditorCt = packed.map(feBytes);
+  }
+  return { proof, auditorCt };
 }
 
 export async function proveRagequit(connection: Connection, note: Note): Promise<{ proof: FormattedProof; leafIndex: number; depositor: PublicKey }> {
@@ -132,11 +146,38 @@ export async function deposit(program: Program, wallet: PublicKey, note: Note) {
     .rpc();
 }
 
-export async function withdraw(program: Program, wallet: PublicKey, proof: FormattedProof, recipient: PublicKey) {
+export async function withdraw(program: Program, wallet: PublicKey, proof: FormattedProof, recipient: PublicKey, auditorCt: number[][] = ZERO_CT) {
   const [rootDeposits, rootAsp, nullifierHash, recipientField] = proof.publicSignals;
-  return program.methods.withdraw({ proofA: proof.proofA, proofB: proof.proofB, proofC: proof.proofC, rootDeposits, rootAsp, nullifierHash, recipientField, auditorCt: [Array(32).fill(0), Array(32).fill(0), Array(32).fill(0), Array(32).fill(0)] })
+  return program.methods.withdraw({ proofA: proof.proofA, proofB: proof.proofB, proofC: proof.proofC, rootDeposits, rootAsp, nullifierHash, recipientField, auditorCt })
     .accounts({ pool: pool(), nullifierRecord: nullifierPda(nullifierHash), vault: vault(), recipient, payer: wallet, systemProgram: SystemProgram.programId })
     .rpc();
+}
+
+export interface AuditRow { sig: string; recipient: string; auditorCt: bigint[]; }
+
+/** Read recent WithdrawEvents (sig + public recipient + auditor ciphertext) for the auditor page. */
+export async function fetchWithdrawals(connection: Connection, program: Program, limit = 40): Promise<AuditRow[]> {
+  const parser = new EventParser(PROGRAM_ID, program.coder);
+  const sigs = await connection.getSignaturesForAddress(PROGRAM_ID, { limit });
+  const rows: AuditRow[] = [];
+  for (const { signature } of sigs) {
+    const txr = await connection.getTransaction(signature, { maxSupportedTransactionVersion: 0 });
+    const logs = txr?.meta?.logMessages;
+    if (!logs) continue;
+    for (const ev of parser.parseLogs(logs)) {
+      if (ev.name === "withdrawEvent" || ev.name === "WithdrawEvent") {
+        const ct = (ev.data.auditorCt as any[]).map((a) => bytesToFe(Array.from(a as number[])));
+        rows.push({ sig: signature, recipient: (ev.data.recipient as PublicKey).toBase58(), auditorCt: ct });
+      }
+    }
+  }
+  return rows;
+}
+
+/** Decrypt one withdrawal's auditor ciphertext into the original depositor address. */
+export async function auditDecrypt(auditorCt: bigint[], priv: bigint): Promise<string> {
+  const [hi, lo] = await decrypt(auditorCt, priv);
+  return new PublicKey(fieldsToAddressBytes(hi, lo)).toBase58();
 }
 
 export async function ragequit(program: Program, wallet: PublicKey, r: { proof: FormattedProof; leafIndex: number; depositor: PublicKey }) {

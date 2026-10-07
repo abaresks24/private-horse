@@ -33,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <nav>
                 <a href="/">Home</a>
                 <a href="/app">App</a>
+                <a href="/auditor">Auditor</a>
                 <a href="/docs">Docs</a>
                 <a href={EXPLORER} target="_blank" rel="noreferrer" className="nav-devnet">Devnet&nbsp;↗</a>
               </nav>
