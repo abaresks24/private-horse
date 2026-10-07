@@ -69,17 +69,27 @@ class MerkleTree {
 export interface Deposit { commitment: bigint; depositor: string; leafIndex: number; }
 
 export async function fetchDeposits(connection: Connection): Promise<Deposit[]> {
-  const accts = await connection.getProgramAccounts(PROGRAM_ID, { filters: [{ dataSize: DEPOSIT_RECORD_SIZE }] });
-  return accts
-    .map(({ account }) => {
-      const d = account.data;
-      return {
-        depositor: new PublicKey(d.subarray(8, 40)).toBase58(),
-        leafIndex: Number(d.readBigUInt64LE(40)),
-        commitment: BigInt("0x" + Buffer.from(d.subarray(48, 80)).toString("hex")),
-      };
-    })
-    .sort((a, b) => a.leafIndex - b.leafIndex);
+  // Read ONLY this pool's DepositRecords by deriving their PDAs (seed "deposit2", index 0..nextIndex-1).
+  // getProgramAccounts(dataSize) would also return the orphaned old-pool records (same struct) and
+  // poison the Merkle root.
+  const poolAcc = await connection.getAccountInfo(pool());
+  if (!poolAcc) return [];
+  const pv = new DataView(poolAcc.data.buffer, poolAcc.data.byteOffset, poolAcc.data.byteLength);
+  const nextIndex = Number(pv.getBigUint64(144, true)); // Pool.next_index offset
+  if (nextIndex === 0) return [];
+  const pdas = Array.from({ length: nextIndex }, (_, i) => depositRecordPda(i));
+  const infos = await connection.getMultipleAccountsInfo(pdas);
+  const out: Deposit[] = [];
+  infos.forEach((acc, i) => {
+    if (!acc) return;
+    const d = acc.data as Buffer;
+    out.push({
+      depositor: new PublicKey(d.subarray(8, 40)).toBase58(),
+      leafIndex: i,
+      commitment: BigInt("0x" + Buffer.from(d.subarray(48, 80)).toString("hex")),
+    });
+  });
+  return out;
 }
 
 /** The clean set the client proves against — must match what the keeper publishes on-chain via

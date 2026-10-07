@@ -45,11 +45,14 @@ async function publish() {
   const program = new anchor.Program(idl as anchor.Idl, provider);
   const [pool] = PublicKey.findProgramAddressSync([seed("pool2")], PID);
 
-  const accts = await conn.getProgramAccounts(PID, { filters: [{ dataSize: 88 }] });
-  const deposits = accts.map(({ account }) => {
-    const d = account.data as Buffer;
-    return { leafIndex: Number(d.readBigUInt64LE(40)), commitment: BigInt("0x" + d.subarray(48, 80).toString("hex")) };
-  }).sort((a, b) => a.leafIndex - b.leafIndex);
+  // v2 pool only: read DepositRecords by deriving their PDAs (seed "deposit2"), not getProgramAccounts
+  // (which also returns orphaned old-pool records and would poison the root).
+  const poolInfo = await conn.getAccountInfo(pool);
+  const nextIndex = poolInfo ? Number(new DataView(poolInfo.data.buffer, poolInfo.data.byteOffset, poolInfo.data.byteLength).getBigUint64(144, true)) : 0;
+  const pdas = Array.from({ length: nextIndex }, (_, i) => PublicKey.findProgramAddressSync([seed("deposit2"), new anchor.BN(i).toArrayLike(Buffer, "le", 8)], PID)[0]);
+  const infos = nextIndex ? await conn.getMultipleAccountsInfo(pdas) : [];
+  const deposits = infos.map((acc, i) => acc ? { leafIndex: i, commitment: BigInt("0x" + (acc.data as Buffer).subarray(48, 80).toString("hex")) } : null)
+    .filter(Boolean) as { leafIndex: number; commitment: bigint }[];
 
   const p = await buildPoseidon();
   const root = merkleRoot(deposits.map((d) => d.commitment), p);
