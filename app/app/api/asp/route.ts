@@ -31,7 +31,8 @@ function merkleRoot(leaves: bigint[], p: any): bigint {
   return lvl[0];
 }
 
-async function publish() {
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+async function publish(min: number) {
   const conn = new Connection(RPC, "confirmed");
   // forwarder (on_report authority) is a token-owned account — can SIGN but can't pay fees. A
   // separate funded fee-payer (FEE_PAYER_SECRET) pays; forwarder co-signs.
@@ -50,8 +51,15 @@ async function publish() {
 
   // v2 pool only: read DepositRecords by deriving their PDAs (seed "deposit2"), not getProgramAccounts
   // (which also returns orphaned old-pool records and would poison the root).
-  const poolInfo = await conn.getAccountInfo(pool);
-  const nextIndex = poolInfo ? Number(new DataView(poolInfo.data.buffer, poolInfo.data.byteOffset, poolInfo.data.byteLength).getBigUint64(144, true)) : 0;
+  // Wait until the serverless node sees at least `min` deposits (RPC propagation lag after a deposit),
+  // so we publish the root the client is about to prove against — otherwise UnknownAspRoot.
+  let nextIndex = 0;
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const poolInfo = await conn.getAccountInfo(pool);
+    nextIndex = poolInfo ? Number(new DataView(poolInfo.data.buffer, poolInfo.data.byteOffset, poolInfo.data.byteLength).getBigUint64(144, true)) : 0;
+    if (nextIndex >= min) break;
+    await sleep(1200);
+  }
   const pdas = Array.from({ length: nextIndex }, (_, i) => PublicKey.findProgramAddressSync([seed("deposit2"), new anchor.BN(i).toArrayLike(Buffer, "le", 8)], PID)[0]);
   const infos = nextIndex ? await conn.getMultipleAccountsInfo(pdas) : [];
   const deposits = infos.map((acc, i) => acc ? { leafIndex: i, commitment: BigInt("0x" + (acc.data as Buffer).subarray(48, 80).toString("hex")) } : null)
@@ -76,8 +84,9 @@ async function publish() {
   return { published: true, root: "0x" + root.toString(16), epoch, count: deposits.length, sig };
 }
 
-export async function GET() {
-  try { return NextResponse.json(await publish()); }
+export async function GET(req: Request) {
+  const min = Number(new URL(req.url).searchParams.get("min") ?? 0);
+  try { return NextResponse.json(await publish(min)); }
   catch (e: any) { return NextResponse.json({ error: e?.message ?? String(e) }, { status: 500 }); }
 }
-export async function POST() { return GET(); }
+export async function POST(req: Request) { return GET(req); }

@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useConnection, useWallet, useAnchorWallet } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
 import { LoaderOverlay } from "../../components/Loader";
 import {
   getProgram, depositBatch, provenanceCheck, proveWithdraw, withdrawViaRelay, proveRagequit, ragequit,
-  pool, freshRecipient,
+  pool, freshRecipient, fetchDeposits,
 } from "../../lib/protocol";
 import { DERIVATION_MESSAGE, freeNotes, discoverDeposits, type MyDeposit } from "../../lib/account";
 
@@ -40,6 +41,7 @@ export default function AppPage() {
   // derived "account": the wallet signature is the seed — nothing to store.
   const [seed, setSeed] = useState<Uint8Array | null>(null);
   const [myDeposits, setMyDeposits] = useState<MyDeposit[] | null>(null);
+  const [dest, setDest] = useState(""); // recipient address the user controls (fresh wallet)
 
   async function refresh() { try { const acc = await connection.getAccountInfo(pool()); if (acc) setPoolInfo(decodePool(new Uint8Array(acc.data))); } catch { /* */ } }
   useEffect(() => { refresh(); const t = setInterval(refresh, 8000); return () => clearInterval(t); }, [connection]);
@@ -80,7 +82,7 @@ export default function AppPage() {
       const sigs = await depositBatch(program, connection, publicKey, signAllTransactions, ns,
         (done, totalN) => setBusy(`Depositing ${done}/${totalN}`));
       setBusy("Publishing clean set (CRE keeper)");
-      try { await fetch("/api/asp", { method: "POST" }); } catch { /* keeper catches up */ }
+      try { const n = (await fetchDeposits(connection)).length; await fetch(`/api/asp?min=${n}`, { method: "POST" }); } catch { /* keeper catches up */ }
       setLog({ kind: "ok", msg: `Mixed ${total.toFixed(2)} SOL as ${chunks} × ${sol(denom)}. Nothing to save — reconnect and sign to withdraw.`, sigs });
       refresh();
     } catch (e: any) {
@@ -110,16 +112,17 @@ export default function AppPage() {
 
   async function onWithdrawAll() {
     if (!program || !publicKey || !avail.length) return;
+    let recipient: PublicKey;
+    try { recipient = new PublicKey(dest.trim()); } catch { setLog({ kind: "err", msg: "Enter a valid recipient address — a fresh wallet you control." }); return; }
     setLog(null);
     const sigs: string[] = [];
     try {
       setBusy("Syncing clean set (CRE keeper)");
-      try { await fetch("/api/asp", { method: "POST" }); } catch { /* */ }
+      try { const n = (await fetchDeposits(connection)).length; await fetch(`/api/asp?min=${n}`, { method: "POST" }); } catch { /* */ }
       for (let k = 0; k < avail.length; k++) {
         setBusy(`Proving & withdrawing ${k + 1}/${avail.length}`);
-        const r = freshRecipient();
-        const { proof, auditorCt } = await proveWithdraw(connection, avail[k].note, r);
-        sigs.push(await withdrawViaRelay(proof, r, auditorCt)); // relayer pays -> wallet unlinked
+        const { proof, auditorCt } = await proveWithdraw(connection, avail[k].note, recipient);
+        sigs.push(await withdrawViaRelay(proof, recipient, auditorCt)); // relayer pays -> wallet unlinked
       }
       setLog({ kind: "ok", msg: `Withdrew ${avail.length} × ${sol(denom)} privately → fresh addresses.`, sigs });
       const s = await ensureSeed(); setMyDeposits(await discoverDeposits(connection, s, denom)); refresh();
@@ -204,8 +207,9 @@ export default function AppPage() {
                     </div>
                     <div className="splitline"><span>{avail.length} available</span><span className="split-val">{spentCount} already withdrawn</span></div>
                   </div>
-                  <button className="bigbtn" disabled={!!busy || avail.length < 1} onClick={onWithdrawAll}>
-                    {avail.length < 1 ? "Nothing to withdraw" : `Withdraw ${(avail.length * denomSol).toFixed(1)} SOL privately`}
+                  <input className="field destfield" placeholder="Recipient address — a fresh wallet you control" value={dest} onChange={(e) => setDest(e.target.value.trim())} />
+                  <button className="bigbtn" disabled={!!busy || avail.length < 1 || !dest} onClick={onWithdrawAll}>
+                    {avail.length < 1 ? "Nothing to withdraw" : !dest ? "Enter a recipient address" : `Withdraw ${(avail.length * denomSol).toFixed(1)} SOL → fresh address`}
                   </button>
                   <button className="linkbtn" disabled={!!busy || avail.length < 1} onClick={onRagequitAll}>Flagged out of the clean set? Ragequit all to origin →</button>
                 </>
