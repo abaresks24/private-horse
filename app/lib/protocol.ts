@@ -165,7 +165,8 @@ export async function depositBatch(
 ): Promise<string[]> {
   const poolAcc: any = await (program.account as any).pool.fetch(pool());
   const base = poolAcc.nextIndex.toNumber();
-  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+  // "finalized" blockhash is known by every node, so the RPC's simulation node can't 429/"Blockhash not found".
+  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("finalized");
 
   const txs: Transaction[] = [];
   for (let k = 0; k < notes.length; k++) {
@@ -182,7 +183,9 @@ export async function depositBatch(
   const signed = await signAll(txs); // single approval in the wallet
   const sigs: string[] = [];
   for (let k = 0; k < signed.length; k++) {
-    const sig = await connection.sendRawTransaction(signed[k].serialize(), { maxRetries: 5 });
+    // skipPreflight avoids the flaky "Blockhash not found" simulation on multi-node RPCs; the tx still
+    // lands if valid, and we check the confirmed result's err below.
+    const sig = await connection.sendRawTransaction(signed[k].serialize(), { skipPreflight: true, maxRetries: 5 });
     const conf = await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
     if (conf.value.err) throw new Error(`deposit ${k + 1}/${signed.length} failed on-chain: ${JSON.stringify(conf.value.err)}`);
     sigs.push(sig);
