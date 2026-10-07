@@ -75,16 +75,20 @@ export async function discoverDeposits(
   const byCommit = new Map<bigint, Deposit>();
   for (const d of await fetchDeposits(connection)) byCommit.set(d.commitment, d);
 
-  const out: MyDeposit[] = [];
+  // Match our derived notes to on-chain deposits (pure, no RPC).
+  const found: { index: number; note: Note; leafIndex: number }[] = [];
   let miss = 0;
   for (let i = 0; i < maxScan && miss < 10; i++) {
     const note = await deriveNote(seed, i, amount);
     const dep = byCommit.get(await noteCommitment(note));
     if (!dep) { miss++; continue; }
     miss = 0;
-    const nh = feToBytes(await noteNullifierHash(note));
-    const spent = (await connection.getAccountInfo(nullifierPda(nh))) !== null;
-    out.push({ index: i, note, leafIndex: dep.leafIndex, spent });
+    found.push({ index: i, note, leafIndex: dep.leafIndex });
   }
-  return out;
+  if (!found.length) return [];
+
+  // Batch the spent-checks into ONE RPC call (avoids rate limits on public devnet RPC).
+  const pdas = await Promise.all(found.map(async (f) => nullifierPda(feToBytes(await noteNullifierHash(f.note)))));
+  const infos = await connection.getMultipleAccountsInfo(pdas);
+  return found.map((f, i) => ({ ...f, spent: infos[i] !== null }));
 }

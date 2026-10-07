@@ -81,7 +81,10 @@ export default function AppPage() {
         (done, totalN) => setBusy(`Depositing ${done}/${totalN}`));
       setLog({ kind: "ok", msg: `Mixed ${total.toFixed(2)} SOL as ${chunks} × ${sol(denom)}. Nothing to save — reconnect and sign to withdraw.`, sigs });
       refresh();
-    } catch (e: any) { setLog({ kind: "err", msg: e.message }); } finally { setBusy(""); }
+    } catch (e: any) {
+      const m = String(e?.message ?? e);
+      setLog({ kind: "err", msg: /429|rate.?limit|Too Many/i.test(m) ? "Devnet is busy right now — try again in a moment." : m });
+    } finally { setBusy(""); }
   }
 
   async function onLoad() {
@@ -94,7 +97,10 @@ export default function AppPage() {
       const mine = await discoverDeposits(connection, s, denom);
       setMyDeposits(mine);
       if (!mine.length) setLog({ kind: "err", msg: "No deposits found for this wallet yet." });
-    } catch (e: any) { setLog({ kind: "err", msg: e.message }); } finally { setBusy(""); }
+    } catch (e: any) {
+      const m = String(e?.message ?? e);
+      setLog({ kind: "err", msg: /429|rate.?limit|Too Many/i.test(m) ? "Devnet is busy right now — try again in a moment." : "No deposits found for this wallet yet." });
+    } finally { setBusy(""); }
   }
 
   const avail = (myDeposits ?? []).filter((d) => !d.spent);
