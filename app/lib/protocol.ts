@@ -82,17 +82,11 @@ export async function fetchDeposits(connection: Connection): Promise<Deposit[]> 
     .sort((a, b) => a.leafIndex - b.leafIndex);
 }
 
-/** Re-run provenance (mock) to rebuild the clean set — same k-of-n the CRE keeper uses. */
+/** The clean set the client proves against — must match what the keeper publishes on-chain via
+ *  on_report. The deployed keeper (/api/asp) treats all deposits as clean (faucet funds are clean;
+ *  the DON gatekeeper's dirty-flipping is the local demo), so the client mirrors that here. */
 async function cleanSet(deposits: Deposit[]): Promise<bigint[]> {
-  const clean: bigint[] = [];
-  for (const d of deposits) {
-    let ok = 0;
-    for (const s of SOURCES) {
-      try { const r = await fetch(`${MOCK_URL}/${s}?address=${d.depositor}`); const j = await r.json(); if (j.clean) ok++; } catch { /* source down */ }
-    }
-    if (ok >= QUORUM) clean.push(d.commitment);
-  }
-  return clean;
+  return deposits.map((d) => d.commitment);
 }
 
 /** Build the Groth16 withdraw proof + the auditor ciphertext (encrypts the ORIGINAL depositor). */

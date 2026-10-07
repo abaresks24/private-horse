@@ -79,6 +79,8 @@ export default function AppPage() {
       const ns = await freeNotes(connection, s, denom, chunks);
       const sigs = await depositBatch(program, connection, publicKey, signAllTransactions, ns,
         (done, totalN) => setBusy(`Depositing ${done}/${totalN}`));
+      setBusy("Publishing clean set (CRE keeper)");
+      try { await fetch("/api/asp", { method: "POST" }); } catch { /* keeper catches up */ }
       setLog({ kind: "ok", msg: `Mixed ${total.toFixed(2)} SOL as ${chunks} × ${sol(denom)}. Nothing to save — reconnect and sign to withdraw.`, sigs });
       refresh();
     } catch (e: any) {
@@ -111,6 +113,8 @@ export default function AppPage() {
     setLog(null);
     const sigs: string[] = [];
     try {
+      setBusy("Syncing clean set (CRE keeper)");
+      try { await fetch("/api/asp", { method: "POST" }); } catch { /* */ }
       for (let k = 0; k < avail.length; k++) {
         setBusy(`Proving & withdrawing ${k + 1}/${avail.length}`);
         const r = freshRecipient();
