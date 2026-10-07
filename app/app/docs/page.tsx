@@ -51,18 +51,23 @@ export default function Docs() {
             retroactively.
           </p>
 
-          <h2 id="lifecycle">Lifecycle of a note</h2>
-          <p>Every interaction turns on a single secret <em>note</em>. Here is its full life:</p>
+          <h2 id="lifecycle">Lifecycle of a deposit</h2>
+          <p>
+            Each deposit turns on a secret <em>note</em> — but you never copy or store it. Notes are{" "}
+            <strong>derived deterministically from a one-time wallet signature</strong>, so your wallet
+            is the only backup (the account model). Here is a deposit&apos;s full life:
+          </p>
           <ol>
             <li>
-              <strong>Deposit.</strong> The client samples a random <code>secret</code> and{" "}
-              <code>nullifier</code>, and computes the commitment{" "}
-              <code>C = Poseidon(secret, nullifier, amount)</code>. It sends <code>C</code> and the
-              fixed denomination to the program, which inserts <code>C</code> as a leaf in the on-chain
-              Merkle tree. The depositor&apos;s address is recorded in a <code>DepositRecord</code> only
-              so the oracle can later trace its provenance. The note{" "}
-              <code>horse-&lt;secret&gt;-&lt;nullifier&gt;-&lt;amount&gt;</code> is handed to the user —
-              it never leaves the browser otherwise.
+              <strong>Deposit.</strong> The wallet signs a fixed message once; that signature (ed25519,
+              deterministic) seeds a key tree. For each chunk the client derives{" "}
+              <code>secret = H(sig, &quot;secret&quot;, i)</code> and{" "}
+              <code>nullifier = H(sig, &quot;nullifier&quot;, i)</code>, then commits{" "}
+              <code>C = Poseidon(secret, nullifier, amount)</code> and sends <code>C</code> plus the fixed
+              denomination to the program, which inserts <code>C</code> as a Merkle leaf. One wallet
+              approval signs the whole batch. The depositor&apos;s address is recorded in a{" "}
+              <code>DepositRecord</code> only so the oracle can trace provenance. <strong>Nothing is
+              handed to the user to save</strong> — the signature never leaves the browser.
             </li>
             <li>
               <strong>Attestation.</strong> The CRE DON sees the new deposit, traces the depositor&apos;s
@@ -70,13 +75,14 @@ export default function Docs() {
               association set and publishes the new ASP Merkle root on-chain.
             </li>
             <li>
-              <strong>Withdraw.</strong> The client rebuilds both trees from chain data, finds the paths
-              to <code>C</code>, and generates a Groth16 proof asserting: &ldquo;I know a{" "}
-              <code>(secret, nullifier)</code> whose commitment is a leaf of the deposit tree <em>and</em>{" "}
-              of a published ASP root, and its nullifier hash is <code>h = Poseidon(nullifier)</code>&rdquo;
-              — without revealing <code>C</code>, <code>secret</code>, or which leaf. The program verifies
-              the proof, checks <code>h</code> was never seen, and pays the fixed amount to a fresh
-              recipient address.
+              <strong>Withdraw.</strong> The user re-signs the same message to re-derive their notes, and
+              the client scans the chain to find which deposits are theirs (and which are already spent).
+              For each, it rebuilds both trees, finds the paths to <code>C</code>, and generates a Groth16
+              proof asserting: &ldquo;I know a <code>(secret, nullifier)</code> whose commitment is a leaf
+              of the deposit tree <em>and</em> of a published ASP root, and its nullifier hash is{" "}
+              <code>h = Poseidon(nullifier)</code>&rdquo; — without revealing <code>C</code>,{" "}
+              <code>secret</code>, or which leaf. The program verifies the proof, checks <code>h</code> was
+              never seen, and pays the fixed amount to a fresh recipient address.
             </li>
             <li>
               <strong>Ragequit.</strong> If the association set never included <code>C</code> (the
@@ -84,6 +90,10 @@ export default function Docs() {
               to their <em>original</em> address — public, no privacy, but always available.
             </li>
           </ol>
+          <p className="muted">
+            Because notes are re-derivable from the wallet, losing a &ldquo;note&rdquo; is impossible:
+            reconnect, sign, and the app rediscovers everything you can still withdraw.
+          </p>
 
           <h2 id="crypto">Cryptography</h2>
           <h3>Poseidon over BN254</h3>
