@@ -36,7 +36,7 @@ async function publish() {
   // forwarder (on_report authority) is a token-owned account — can SIGN but can't pay fees. A
   // separate funded fee-payer (FEE_PAYER_SECRET) pays; forwarder co-signs.
   const forwarder = Keypair.fromSeed(Uint8Array.from(new Array(32).fill(7)));
-  const feePayer = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(process.env.FEE_PAYER_SECRET || "[]")));
+  const feePayer = Keypair.fromSeed(Uint8Array.from(Array.from("private-horse-feepayer-v1".padEnd(32, "!")).map((c) => c.charCodeAt(0))));
   const sign = (tx: any) => { if (tx.version !== undefined) tx.sign([feePayer]); else tx.partialSign(feePayer); return tx; };
   const wallet: any = {
     publicKey: feePayer.publicKey,
