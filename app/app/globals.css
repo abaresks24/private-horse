@@ -238,11 +238,13 @@ table.audit td { padding: 12px; border-bottom: 1px solid var(--line); }
 .wallet-adapter-modal-wrapper {
   background: var(--paper) !important; border: 1px solid var(--line-strong) !important;
   border-radius: 0 !important; box-shadow: 0 24px 70px rgba(19,17,16,0.28) !important;
-  color: var(--ink) !important; font-family: var(--sans) !important;
+  color: var(--ink) !important;
 }
+/* kill the bundled DM Sans everywhere in the modal -> use the site's own fonts */
+.wallet-adapter-modal-wrapper * { font-family: var(--sans) !important; }
 .wallet-adapter-modal-title {
-  color: var(--ink) !important; font-family: var(--display) !important; font-weight: 700 !important;
-  font-size: 1.3rem !important; letter-spacing: -0.01em !important;
+  color: var(--ink) !important; font-family: var(--serif) !important; font-weight: 400 !important;
+  font-size: 1.5rem !important; letter-spacing: -0.005em !important;
 }
 .wallet-adapter-modal-button-close {
   background: transparent !important; border: 1px solid var(--line-strong) !important; border-radius: 0 !important;
@@ -252,8 +254,8 @@ table.audit td { padding: 12px; border-bottom: 1px solid var(--line); }
 .wallet-adapter-modal-list li { margin-bottom: 8px !important; }
 .wallet-adapter-modal-list .wallet-adapter-button {
   background: transparent !important; color: var(--ink) !important; border: 1px solid var(--line-strong) !important;
-  border-radius: 0 !important; font-family: var(--mono) !important; font-size: 13px !important;
-  letter-spacing: 0.04em !important; text-transform: none !important; padding: 16px 18px !important; height: auto !important;
+  border-radius: 0 !important; font-family: var(--sans) !important; font-size: 15px !important; font-weight: 500 !important;
+  letter-spacing: 0 !important; text-transform: none !important; padding: 16px 18px !important; height: auto !important;
   transition: background 0.14s, color 0.14s, border-color 0.14s !important;
 }
 .wallet-adapter-modal-list .wallet-adapter-button:hover {
