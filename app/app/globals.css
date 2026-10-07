@@ -13,9 +13,10 @@
   --line: rgba(19, 17, 16, 0.16);
   --line-strong: rgba(19, 17, 16, 0.42);
 
-  --display: "Geist", system-ui, sans-serif;
-  --serif: "Instrument Serif", Georgia, "Times New Roman", serif; /* editorial character: name + slogan */
-  --sans: "Geist", system-ui, sans-serif;
+  /* agama.finance type system: Inter (UI/sans) + Instrument Serif (editorial accent) */
+  --display: "Inter", system-ui, sans-serif;
+  --serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+  --sans: "Inter", system-ui, sans-serif;
   --mono: "Geist Mono", ui-monospace, monospace;
   --header-h: 66px;
 }
