@@ -3,10 +3,10 @@
 import { useState } from "react";
 import HorseMark from "./HorseMark";
 
-// Running horse for the red landing: the red-background MP4 (black horse on the same red) blends
-// seamlessly into the red page — no frame, no artifact. Static white logo if it can't play.
+// Running horse, transparent WebM (VP9 alpha) — the horse floats on whatever is behind it, so the
+// red landing shows through with NO rectangle and NO seam. Static white logo fallback (Safari).
 export default function HeroHorse() {
   const [noVideo, setNoVideo] = useState(false);
-  if (noVideo) return <HorseMark size={150} src="/logo-white.png" />;
-  return <video src="/loader.mp4" autoPlay loop muted playsInline onError={() => setNoVideo(true)} />;
+  if (noVideo) return <HorseMark size={170} src="/logo-white.png" />;
+  return <video src="/loader-transparent.webm" autoPlay loop muted playsInline onError={() => setNoVideo(true)} />;
 }

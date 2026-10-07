@@ -1,9 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { usePathname } from "next/navigation";
 import HorseMark from "./HorseMark";
 
-// Connect-wallet button, client-only (wallet-adapter touches window).
 const WalletMultiButton = dynamic(
   () => import("@solana/wallet-adapter-react-ui").then((m) => m.WalletMultiButton),
   { ssr: false }
@@ -12,6 +12,21 @@ const WalletMultiButton = dynamic(
 const EXPLORER = "https://explorer.solana.com/address/4R4FwpZK1Tj9wAFnyfx17bDTa14hKEoLc5dhjsHhtA1X?cluster=devnet";
 
 export default function HeaderBar() {
+  const landing = usePathname() === "/";
+
+  // Landing: no bar — just the logo (white) top-left and connect-wallet top-right.
+  if (landing) {
+    return (
+      <header className="site landing-head">
+        <a href="/" className="brand" style={{ color: "#fff" }}>
+          <HorseMark size={26} src="/logo-white.png" />
+          <span>Private&nbsp;Horse</span>
+        </a>
+        <div className="wallet-slot"><WalletMultiButton /></div>
+      </header>
+    );
+  }
+
   return (
     <header className="site">
       <a href="/" className="brand">

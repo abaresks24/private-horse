@@ -31,9 +31,9 @@ export function LoaderOverlay({ hidden, label = "Working" }: { hidden: boolean; 
       <div className="stage">
         <div className="horsewrap">
           {noVideo ? (
-            <HorseMark size={180} src="/logo.png" />
+            <HorseMark size={180} src="/logo-white.png" />
           ) : (
-            <video src="/loader.mp4" autoPlay loop muted playsInline onError={() => setNoVideo(true)} />
+            <video src="/loader-transparent.webm" autoPlay loop muted playsInline onError={() => setNoVideo(true)} />
           )}
         </div>
         <div className="wordmark">{label}</div>
