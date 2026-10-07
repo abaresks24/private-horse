@@ -3,7 +3,7 @@
 // on-chain DepositRecords and the ASP (clean) tree by re-running the provenance check — matching
 // what the CRE keeper writes on-chain, so the proof's roots verify.
 
-import { AnchorProvider, Program, BN, EventParser, type Idl } from "@coral-xyz/anchor";
+import { AnchorProvider, Program, BN, EventParser, BorshCoder, type Idl } from "@coral-xyz/anchor";
 import { Connection, PublicKey, SystemProgram, Keypair } from "@solana/web3.js";
 import { buildPoseidon } from "circomlibjs";
 import idl from "./idl/sieve.json";
@@ -155,9 +155,9 @@ export async function withdraw(program: Program, wallet: PublicKey, proof: Forma
 
 export interface AuditRow { sig: string; recipient: string; auditorCt: bigint[]; }
 
-/** Read recent WithdrawEvents (sig + public recipient + auditor ciphertext) for the auditor page. */
-export async function fetchWithdrawals(connection: Connection, program: Program, limit = 40): Promise<AuditRow[]> {
-  const parser = new EventParser(PROGRAM_ID, program.coder);
+/** Read recent WithdrawEvents (sig + public recipient + auditor ciphertext). Read-only, no wallet. */
+export async function fetchWithdrawals(connection: Connection, limit = 40): Promise<AuditRow[]> {
+  const parser = new EventParser(PROGRAM_ID, new BorshCoder(idl as Idl));
   const sigs = await connection.getSignaturesForAddress(PROGRAM_ID, { limit });
   const rows: AuditRow[] = [];
   for (const { signature } of sigs) {

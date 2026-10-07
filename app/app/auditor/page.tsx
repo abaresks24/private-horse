@@ -1,10 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useConnection, useAnchorWallet } from "@solana/wallet-adapter-react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { useState } from "react";
+import { useConnection } from "@solana/wallet-adapter-react";
 import { LoaderOverlay } from "../../components/Loader";
-import { getProgram, fetchWithdrawals, auditDecrypt, type AuditRow } from "../../lib/protocol";
+import { fetchWithdrawals, auditDecrypt, type AuditRow } from "../../lib/protocol";
 import { DEMO_AUDITOR_PRIV } from "../../lib/auditor";
 
 const tx = (s: string) => `https://explorer.solana.com/tx/${s}?cluster=devnet`;
@@ -12,20 +11,16 @@ const short = (s: string) => s.slice(0, 6) + "…" + s.slice(-6);
 
 export default function Auditor() {
   const { connection } = useConnection();
-  const anchorWallet = useAnchorWallet();
-  const program = useMemo(() => (anchorWallet ? getProgram(connection, anchorWallet) : null), [connection, anchorWallet]);
-
   const [key, setKey] = useState("");
   const [busy, setBusy] = useState("");
   const [rows, setRows] = useState<{ row: AuditRow; depositor?: string }[]>([]);
   const [err, setErr] = useState("");
 
   async function onAudit() {
-    if (!program) { setErr("Connect a wallet first (read-only, to query the program)."); return; }
     setErr(""); setBusy("Reading withdrawals & decrypting");
     try {
       const priv = BigInt(key.trim());
-      const withdrawals = await fetchWithdrawals(connection, program);
+      const withdrawals = await fetchWithdrawals(connection);
       const out = [];
       for (const row of withdrawals) {
         let depositor: string | undefined;
@@ -41,18 +36,11 @@ export default function Auditor() {
     <section className="band">
       <LoaderOverlay hidden={!busy} label={busy || "Working"} />
       <div className="wrap" style={{ maxWidth: 920 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 20, flexWrap: "wrap" }}>
-          <div>
-            <p className="eyebrow">Auditor · selective disclosure</p>
-            <h1 className="display h-l">See the real address behind a private withdrawal.</h1>
-          </div>
-          <WalletMultiButton />
-        </div>
-
-        <p className="lede" style={{ margin: "20px 0 8px", maxWidth: "64ch" }}>
+        <h1 className="display h-l">See the real address behind a private withdrawal.</h1>
+        <p className="lede" style={{ margin: "18px 0 20px", maxWidth: "64ch" }}>
           Each private withdrawal encrypts its <strong>original depositor address</strong> to the
           auditor&apos;s key. The recipient is already public; the link to the real identity is not —
-          unless you hold the auditor key. Paste it to decrypt that link, one transaction at a time.
+          unless you hold the auditor key. Paste it to reveal that link, one transaction at a time.
         </p>
 
         <input className="field" placeholder="auditor private key (0x…)" value={key} onChange={(e) => setKey(e.target.value)} />
@@ -64,7 +52,7 @@ export default function Auditor() {
 
         {rows.length > 0 && (
           <table className="audit">
-            <thead><tr><th>Tx</th><th>Public recipient</th><th>Decrypted original depositor</th></tr></thead>
+            <thead><tr><th>Tx</th><th>Public recipient</th><th>Original depositor (decrypted)</th></tr></thead>
             <tbody>
               {rows.map(({ row, depositor }, i) => (
                 <tr key={i}>
@@ -78,9 +66,8 @@ export default function Auditor() {
         )}
 
         <p className="muted" style={{ marginTop: 26, fontSize: 13, maxWidth: "64ch" }}>
-          Note: the ciphertext↔values binding is enforced off-chain here (the honest-encryption
-          in-circuit constraint is the documented hardening step). For the demo, decryption is
-          trustworthy for withdrawals made by this app.
+          The ciphertext↔value binding is enforced off-chain here; the in-circuit honest-encryption
+          constraint is the documented hardening step. Decryption is trustworthy for withdrawals made by this app.
         </p>
       </div>
     </section>

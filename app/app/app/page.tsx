@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useConnection, useWallet, useAnchorWallet } from "@solana/wallet-adapter-react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { LoaderOverlay } from "../../components/Loader";
 import { newNote, serializeNote, parseNote } from "../../lib/notes";
 import {
@@ -59,13 +58,7 @@ export default function AppPage() {
     <section className="band">
       <LoaderOverlay hidden={!busy} label={busy || "Working"} />
       <div className="wrap">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 20, flexWrap: "wrap" }}>
-          <div>
-            <p className="eyebrow">Use the pool · live on devnet</p>
-            <h1 className="display h-l">Deposit, withdraw privately, ragequit.</h1>
-          </div>
-          <WalletMultiButton />
-        </div>
+        <h1 className="display h-l">Deposit, withdraw privately, ragequit.</h1>
 
         <div className="statgrid" style={{ margin: "28px 0 32px" }}>
           <Stat k="Denomination" v={poolInfo ? `${Number(poolInfo.denomination) / 1e9} SOL` : "…"} />
