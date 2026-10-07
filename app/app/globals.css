@@ -110,7 +110,13 @@ section.band { padding: 90px 0; border-bottom: 1px solid var(--line); }
     url("/logo.png") 18% 94% / min(20vw, 230px) no-repeat,
     url("/logo.png") 94% 34% / min(15vw, 170px) no-repeat,
     url("/logo.png") 62% 100% / min(17vw, 200px) no-repeat,
-    url("/logo.png") 40% 6% / min(13vw, 150px) no-repeat;
+    url("/logo.png") 40% 6% / min(13vw, 150px) no-repeat,
+    url("/logo.png") 4% 52% / min(14vw, 160px) no-repeat,
+    url("/logo.png") 80% 86% / min(16vw, 185px) no-repeat,
+    url("/logo.png") 33% 44% / min(12vw, 140px) no-repeat,
+    url("/logo.png") 72% 58% / min(13vw, 150px) no-repeat,
+    url("/logo.png") 52% 78% / min(11vw, 130px) no-repeat,
+    url("/logo.png") 8% 78% / min(12vw, 135px) no-repeat;
 }
 .landing .wrap2, .landing-head { position: relative; z-index: 1; }
 .landing .wrap2 {
@@ -223,8 +229,11 @@ footer.site { padding: 36px 28px 80px; color: var(--taupe); font-family: var(--m
 .seg button { flex: 1; font-family: var(--serif); font-size: 1.2rem; padding: 10px; background: none; border: 0; cursor: pointer; color: var(--taupe); transition: color 0.12s, background 0.12s; }
 .seg button.active { background: #fff; color: var(--red); box-shadow: 0 1px 3px rgba(19,17,16,0.1); }
 
-.amountbox { display: block; border: 1px solid var(--line); background: var(--paper); padding: 16px 18px; margin-bottom: 14px; min-height: 142px; }
+.amountbox { display: block; border: 1px solid var(--line); background: var(--paper); padding: 16px 18px; margin-bottom: 14px; min-height: 152px; }
 .amt-ph { color: var(--taupe); }
+/* both panes fill the card and pin the primary button to the bottom -> identical card size & layout */
+.pane { flex: 1; display: flex; flex-direction: column; }
+.pane .bigbtn { margin-top: auto; }
 .amt-lbl { font-family: var(--serif); font-style: italic; font-size: 1.1rem; color: var(--taupe); }
 .amt-row { display: flex; align-items: baseline; gap: 10px; margin-top: 6px; }
 .amt-input { flex: 1; min-width: 0; width: 100%; font-family: var(--serif); font-size: 2.8rem; line-height: 1.1; border: 0; background: none; color: var(--ink); outline: none; }

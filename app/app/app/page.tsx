@@ -147,6 +147,7 @@ export default function AppPage() {
             <button className={mode === "withdraw" ? "active" : ""} onClick={() => { setMode("withdraw"); setLog(null); }}>Withdraw</button>
           </div>
 
+          <div className="pane">
           {mode === "deposit" ? (
             <>
               <label className="amountbox">
@@ -207,6 +208,7 @@ export default function AppPage() {
               )}
             </>
           )}
+          </div>
 
           {log && (
             <div className={`receipt ${log.kind}`}>
