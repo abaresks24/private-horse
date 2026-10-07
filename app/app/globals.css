@@ -88,10 +88,10 @@ section.band { padding: 90px 0; border-bottom: 1px solid var(--line); }
 @media (max-width: 880px) { .landing .wrap2 { grid-template-columns: 1fr; text-align: center; gap: 30px; } }
 .landing .copy { display: grid; gap: 30px; justify-items: start; }
 @media (max-width: 880px) { .landing .copy { justify-items: center; } .landing .horse { order: -1; } }
-.landing .landing-title { font-family: var(--display); font-weight: 700; color: #fff; margin: 0; font-size: clamp(2.4rem, 5vw, 4rem); line-height: 1.0; letter-spacing: -0.025em; }
-.landing .stats { display: flex; gap: clamp(28px, 4vw, 52px); flex-wrap: wrap; }
-.landing .stat-n { font-family: var(--display); font-weight: 700; font-size: clamp(1.5rem, 2.6vw, 2.1rem); line-height: 1; }
-.landing .stat-l { font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.8); margin-top: 7px; }
+.landing .headblock { display: grid; gap: 14px; justify-items: start; }
+@media (max-width: 880px) { .landing .headblock { justify-items: center; } }
+.landing .landing-title { font-family: var(--display); font-weight: 700; color: #fff; margin: 0; font-size: clamp(2.8rem, 6vw, 5rem); line-height: 0.98; letter-spacing: -0.03em; }
+.landing .landing-slogan { font-family: var(--sans); font-weight: 400; margin: 0; font-size: clamp(1.1rem, 1.7vw, 1.45rem); color: rgba(255,255,255,0.92); max-width: 34ch; }
 .landing .ctas { display: flex; gap: 14px; flex-wrap: wrap; }
 .landing .btn { background: #fff; color: var(--red); }
 .landing .btn:hover { background: #121212; color: #fff; }

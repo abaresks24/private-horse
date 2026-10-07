@@ -33,7 +33,8 @@ export function LoaderOverlay({ hidden, label = "Working" }: { hidden: boolean; 
           {noVideo ? (
             <HorseMark size={180} src="/logo-white.png" />
           ) : (
-            <video src="/loader-transparent.webm" autoPlay loop muted playsInline onError={() => setNoVideo(true)} />
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src="/loader-round.webp" alt="Private Horse" onError={() => setNoVideo(true)} />
           )}
         </div>
         <div className="wordmark">{label}</div>

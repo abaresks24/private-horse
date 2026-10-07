@@ -3,10 +3,11 @@
 import { useState } from "react";
 import HorseMark from "./HorseMark";
 
-// Running horse, transparent WebM (VP9 alpha) — the horse floats on whatever is behind it, so the
-// red landing shows through with NO rectangle and NO seam. Static white logo fallback (Safari).
+// Transparent animated WebP (argb) — animates in Chrome, Firefox AND Safari as a plain <img>,
+// with true alpha, so the horse floats on the red page: no rectangle, no seam, no bar anywhere.
 export default function HeroHorse() {
-  const [noVideo, setNoVideo] = useState(false);
-  if (noVideo) return <HorseMark size={170} src="/logo-white.png" />;
-  return <video src="/loader-transparent.webm" autoPlay loop muted playsInline onError={() => setNoVideo(true)} />;
+  const [bad, setBad] = useState(false);
+  if (bad) return <HorseMark size={170} src="/logo-white.png" />;
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src="/loader-round.webp" alt="Private Horse" onError={() => setBad(true)} />;
 }
