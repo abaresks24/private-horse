@@ -40,7 +40,6 @@ export function LoaderOverlay({ hidden, label = "Working" }: { hidden: boolean; 
           )}
         </div>
         <div className="wordmark">{label}</div>
-        <div className="barline" />
       </div>
     </div>
   );

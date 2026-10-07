@@ -5,13 +5,9 @@ export default function Landing() {
     <section className="landing">
       <div className="inner">
         <div className="horse"><HeroHorse /></div>
-        <h1 className="display h-xl">
-          Private by default.<br />
-          <span className="red">Clean</span> by proof.
-        </h1>
-        <p className="lede">
-          A privacy pool whose clean-set is maintained by a decentralized Chainlink&nbsp;CRE oracle.
-          Withdraw by proving your funds are clean — in zero-knowledge, on Solana.
+        <p className="tagline">
+          A privacy pool whose clean-set is kept by a decentralized Chainlink&nbsp;CRE oracle.
+          Clean by proof, private by default.
         </p>
         <div className="ctas">
           <a className="btn" href="/app">Launch app</a>
