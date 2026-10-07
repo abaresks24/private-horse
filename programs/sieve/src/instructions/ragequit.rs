@@ -42,7 +42,7 @@ pub struct Ragequit<'info> {
     pub deposit_record: Account<'info, DepositRecord>,
 
     /// CHECK: system-owned vault PDA.
-    #[account(mut, seeds = [b"vault"], bump)]
+    #[account(mut, seeds = [b"vault2"], bump)]
     pub vault: SystemAccount<'info>,
 
     /// CHECK: must be the original depositor recorded at deposit time.
@@ -68,7 +68,7 @@ pub fn handler(ctx: Context<Ragequit>, args: RagequitArgs) -> Result<()> {
 
     let amount = pool.denomination;
     let bump = ctx.bumps.vault;
-    let seeds: &[&[u8]] = &[b"vault", &[bump]];
+    let seeds: &[&[u8]] = &[b"vault2", &[bump]];
     anchor_lang::system_program::transfer(
         CpiContext::new_with_signer(
             ctx.accounts.system_program.to_account_info(),

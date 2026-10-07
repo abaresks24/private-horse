@@ -1,7 +1,7 @@
 {
   "schedule": "*/30 * * * * *",
   "programId": "4R4FwpZK1Tj9wAFnyfx17bDTa14hKEoLc5dhjsHhtA1X",
-  "poolPda": "GSrs6STYjXULpMkRjbEHPwQrsjgZb2FYWx5ArsNKvGGN",
+  "poolPda": "EEaCW116u9fZvN5BUKZgjvfkKCVoDHMVzvTYAD4RvyDP",
   "quorum": 2,
   "sources": [
     { "name": "trace", "url": "http://localhost:8787/trace?address=" },

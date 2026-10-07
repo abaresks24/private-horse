@@ -22,10 +22,10 @@ const SOURCES = ["trace", "ofac", "hacks"];
 const DEPOSIT_RECORD_SIZE = 88;
 
 const seed = (s: string) => new TextEncoder().encode(s);
-export const pool = () => PublicKey.findProgramAddressSync([seed("pool")], PROGRAM_ID)[0];
-export const vault = () => PublicKey.findProgramAddressSync([seed("vault")], PROGRAM_ID)[0];
-export const nullifierPda = (nh: number[]) => PublicKey.findProgramAddressSync([seed("nullifier"), Uint8Array.from(nh)], PROGRAM_ID)[0];
-export const depositRecordPda = (i: number) => PublicKey.findProgramAddressSync([seed("deposit"), new BN(i).toArrayLike(Buffer, "le", 8)], PROGRAM_ID)[0];
+export const pool = () => PublicKey.findProgramAddressSync([seed("pool2")], PROGRAM_ID)[0];
+export const vault = () => PublicKey.findProgramAddressSync([seed("vault2")], PROGRAM_ID)[0];
+export const nullifierPda = (nh: number[]) => PublicKey.findProgramAddressSync([seed("nullifier2"), Uint8Array.from(nh)], PROGRAM_ID)[0];
+export const depositRecordPda = (i: number) => PublicKey.findProgramAddressSync([seed("deposit2"), new BN(i).toArrayLike(Buffer, "le", 8)], PROGRAM_ID)[0];
 
 export function getProgram(connection: Connection, wallet: any): Program {
   const provider = new AnchorProvider(connection, wallet, { commitment: "confirmed" });

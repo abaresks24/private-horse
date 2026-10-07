@@ -36,7 +36,8 @@
                   112,
                   111,
                   111,
-                  108
+                  108,
+                  50
                 ]
               }
             ]
@@ -60,7 +61,8 @@
                   111,
                   115,
                   105,
-                  116
+                  116,
+                  50
                 ]
               },
               {
@@ -74,7 +76,7 @@
         {
           "name": "vault",
           "docs": [
-            "Vault PDA that custodies deposited lamports (seeds = [b\"vault\"])."
+            "Vault PDA that custodies deposited lamports (seeds = [b\"vault2\"])."
           ],
           "writable": true,
           "pda": {
@@ -86,7 +88,8 @@
                   97,
                   117,
                   108,
-                  116
+                  116,
+                  50
                 ]
               }
             ]
@@ -143,7 +146,8 @@
                   112,
                   111,
                   111,
-                  108
+                  108,
+                  50
                 ]
               }
             ]
@@ -208,7 +212,8 @@
                   112,
                   111,
                   111,
-                  108
+                  108,
+                  50
                 ]
               }
             ]
@@ -308,7 +313,8 @@
                   112,
                   111,
                   111,
-                  108
+                  108,
+                  50
                 ]
               }
             ]
@@ -330,7 +336,8 @@
                   102,
                   105,
                   101,
-                  114
+                  114,
+                  50
                 ]
               },
               {
@@ -353,7 +360,8 @@
                   111,
                   115,
                   105,
-                  116
+                  116,
+                  50
                 ]
               },
               {
@@ -375,7 +383,8 @@
                   97,
                   117,
                   108,
-                  116
+                  116,
+                  50
                 ]
               }
             ]
@@ -435,7 +444,8 @@
                   112,
                   111,
                   111,
-                  108
+                  108,
+                  50
                 ]
               }
             ]
@@ -461,7 +471,8 @@
                   102,
                   105,
                   101,
-                  114
+                  114,
+                  50
                 ]
               },
               {
@@ -483,7 +494,8 @@
                   97,
                   117,
                   108,
-                  116
+                  116,
+                  50
                 ]
               }
             ]
@@ -759,7 +771,7 @@
       "name": "DepositRecord",
       "docs": [
         "Records the original depositor for each leaf index, so `ragequit` can only refund the origin.",
-        "PDA seeds = [b\"deposit\", leaf_index_le]. Also the hook the CRE workflow reads (via RPC) to know",
+        "PDA seeds = [b\"deposit2\", leaf_index_le]. Also the hook the CRE workflow reads (via RPC) to know",
         "which address to trace for provenance."
       ],
       "type": {
@@ -792,7 +804,7 @@
     {
       "name": "NullifierRecord",
       "docs": [
-        "One PDA per spent nullifier (seeds = [b\"nullifier\", nullifier_hash]). Its mere existence marks",
+        "One PDA per spent nullifier (seeds = [b\"nullifier2\", nullifier_hash]). Its mere existence marks",
         "the note as spent — prevents double-withdraw without revealing which commitment was spent."
       ],
       "type": {
@@ -808,7 +820,7 @@
     {
       "name": "Pool",
       "docs": [
-        "Global pool account (PDA, seeds = [b\"pool\"]). Holds config + both Merkle commitments."
+        "Global pool account (PDA, seeds = [b\"pool2\"]). Holds config + both Merkle commitments."
       ],
       "type": {
         "kind": "struct",

@@ -6,7 +6,7 @@ pub const TREE_HEIGHT: usize = 20;
 /// Kept modest so the Pool account stays well under the 4KB BPF stack frame on deserialization.
 pub const ROOT_HISTORY_SIZE: usize = 16;
 
-/// Global pool account (PDA, seeds = [b"pool"]). Holds config + both Merkle commitments.
+/// Global pool account (PDA, seeds = [b"pool2"]). Holds config + both Merkle commitments.
 #[account]
 pub struct Pool {
     pub authority: Pubkey,
@@ -33,7 +33,7 @@ pub struct Pool {
 }
 
 impl Pool {
-    pub const SEED: &'static [u8] = b"pool";
+    pub const SEED: &'static [u8] = b"pool2";
 
     pub const SIZE: usize = 8          // discriminator
         + 32                           // authority
@@ -68,7 +68,7 @@ impl Pool {
     }
 }
 
-/// One PDA per spent nullifier (seeds = [b"nullifier", nullifier_hash]). Its mere existence marks
+/// One PDA per spent nullifier (seeds = [b"nullifier2", nullifier_hash]). Its mere existence marks
 /// the note as spent — prevents double-withdraw without revealing which commitment was spent.
 #[account]
 pub struct NullifierRecord {
@@ -76,12 +76,12 @@ pub struct NullifierRecord {
 }
 
 impl NullifierRecord {
-    pub const SEED: &'static [u8] = b"nullifier";
+    pub const SEED: &'static [u8] = b"nullifier2";
     pub const SIZE: usize = 8 + 1;
 }
 
 /// Records the original depositor for each leaf index, so `ragequit` can only refund the origin.
-/// PDA seeds = [b"deposit", leaf_index_le]. Also the hook the CRE workflow reads (via RPC) to know
+/// PDA seeds = [b"deposit2", leaf_index_le]. Also the hook the CRE workflow reads (via RPC) to know
 /// which address to trace for provenance.
 #[account]
 pub struct DepositRecord {
@@ -92,7 +92,7 @@ pub struct DepositRecord {
 }
 
 impl DepositRecord {
-    pub const SEED: &'static [u8] = b"deposit";
+    pub const SEED: &'static [u8] = b"deposit2";
     pub const SIZE: usize = 8 + 32 + 8 + 32 + 8;
 }
 

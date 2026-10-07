@@ -35,7 +35,7 @@ export default function AppPage() {
   const [log, setLog] = useState<{ kind: "ok" | "err"; msg: string; sigs?: string[] } | null>(null);
 
   // deposit (mix) state
-  const [amount, setAmount] = useState("0.9");
+  const [amount, setAmount] = useState("0.5");
   const [notes, setNotes] = useState<string[]>([]);
   const [prov, setProv] = useState<Prov | null>(null);
 
@@ -45,7 +45,7 @@ export default function AppPage() {
   async function refresh() { try { const acc = await connection.getAccountInfo(pool()); if (acc) setPoolInfo(decodePool(new Uint8Array(acc.data))); } catch { /* */ } }
   useEffect(() => { refresh(); const t = setInterval(refresh, 8000); return () => clearInterval(t); }, [connection]);
 
-  const denom = poolInfo ? poolInfo.denomination : 300_000_000n;
+  const denom = poolInfo ? poolInfo.denomination : 100_000_000n;
   const denomSol = Number(denom) / 1e9;
   const sol = (v: bigint) => `${Number(v) / 1e9} SOL`;
   const amt = parseFloat(amount) || 0;
@@ -107,7 +107,7 @@ export default function AppPage() {
                   <span className="amt-unit">SOL</span>
                 </div>
                 <div className="amt-chips">
-                  {[0.3, 0.9, 3, 9].map((a) => (
+                  {[0.1, 0.5, 1, 5].map((a) => (
                     <button key={a} className="chip" onClick={() => setAmount(String(a))}>{a}</button>
                   ))}
                 </div>

@@ -20,9 +20,9 @@ pub struct Deposit<'info> {
     )]
     pub deposit_record: Account<'info, DepositRecord>,
 
-    /// Vault PDA that custodies deposited lamports (seeds = [b"vault"]).
+    /// Vault PDA that custodies deposited lamports (seeds = [b"vault2"]).
     /// CHECK: system-owned PDA used only as a lamport sink/source.
-    #[account(mut, seeds = [b"vault"], bump)]
+    #[account(mut, seeds = [b"vault2"], bump)]
     pub vault: SystemAccount<'info>,
 
     #[account(mut)]
