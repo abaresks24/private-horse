@@ -1,5 +1,5 @@
 /* Private Horse — art direction, built on the logo's own palette: red #ce0000, black horse, bone.
-   One typeface everywhere: Oswald — condensed & energetic, echoing the galloping-horse logo. */
+   One typeface everywhere: Inter Display (optical-size axis, display cut on large text). */
 
 :root {
   --paper: #f3efe6;
@@ -12,11 +12,11 @@
   --line: rgba(19, 17, 16, 0.16);
   --line-strong: rgba(19, 17, 16, 0.42);
 
-  /* Oswald everywhere — titles, body, numbers, data. No other typeface. */
-  --display: "Oswald", system-ui, sans-serif;
-  --serif: "Oswald", system-ui, sans-serif;
-  --sans: "Oswald", system-ui, sans-serif;
-  --mono: "Oswald", ui-monospace, monospace;
+  /* Inter (Display) everywhere — titles, body, numbers, data. No other typeface. */
+  --display: "Inter", system-ui, sans-serif;
+  --serif: "Inter", system-ui, sans-serif;
+  --sans: "Inter", system-ui, sans-serif;
+  --mono: "Inter", ui-monospace, monospace;
   --header-h: 66px;
 }
 
@@ -27,6 +27,7 @@ body {
   background-color: var(--paper);
   color: var(--ink);
   font-family: var(--sans);
+  font-optical-sizing: auto;
   font-size: 16px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
