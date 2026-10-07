@@ -33,11 +33,14 @@ function merkleRoot(leaves: bigint[], p: any): bigint {
 
 async function publish() {
   const conn = new Connection(RPC, "confirmed");
+  // forwarder (on_report authority) is a token-owned account — can SIGN but can't pay fees. A
+  // separate funded fee-payer (FEE_PAYER_SECRET) pays; forwarder co-signs.
   const forwarder = Keypair.fromSeed(Uint8Array.from(new Array(32).fill(7)));
-  const sign = (tx: any) => { if (tx.version !== undefined) tx.sign([forwarder]); else tx.partialSign(forwarder); return tx; };
+  const feePayer = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(process.env.FEE_PAYER_SECRET || "[]")));
+  const sign = (tx: any) => { if (tx.version !== undefined) tx.sign([feePayer]); else tx.partialSign(feePayer); return tx; };
   const wallet: any = {
-    publicKey: forwarder.publicKey,
-    payer: forwarder,
+    publicKey: feePayer.publicKey,
+    payer: feePayer,
     signTransaction: async (tx: any) => sign(tx),
     signAllTransactions: async (txs: any[]) => txs.map(sign),
   };
@@ -68,6 +71,7 @@ async function publish() {
   const sig = await program.methods
     .onReport({ aspRoot: rootBytes, epoch: new anchor.BN(epoch), cleanCount: new anchor.BN(deposits.length) })
     .accounts({ pool, forwarder: forwarder.publicKey })
+    .signers([forwarder])
     .rpc();
   return { published: true, root: "0x" + root.toString(16), epoch, count: deposits.length, sig };
 }
