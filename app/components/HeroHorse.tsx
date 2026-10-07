@@ -3,15 +3,10 @@
 import { useState } from "react";
 import HorseMark from "./HorseMark";
 
-// The running horse on the red landing — transparent WebM (black horse) over red, with the
-// red-background MP4 as the Safari fallback so it blends seamlessly. Static logo if neither plays.
+// Running horse for the red landing: the red-background MP4 (black horse on the same red) blends
+// seamlessly into the red page — no frame, no artifact. Static white logo if it can't play.
 export default function HeroHorse() {
   const [noVideo, setNoVideo] = useState(false);
   if (noVideo) return <HorseMark size={150} src="/logo-white.png" />;
-  return (
-    <video autoPlay loop muted playsInline onError={() => setNoVideo(true)}>
-      <source src="/loader-transparent.webm" type="video/webm" />
-      <source src="/loader.mp4" type="video/mp4" />
-    </video>
-  );
+  return <video src="/loader.mp4" autoPlay loop muted playsInline onError={() => setNoVideo(true)} />;
 }
