@@ -1,13 +1,5 @@
 /* Private Horse — art direction, built on the logo's own palette: red #ce0000, black horse, bone.
-   One typeface everywhere: Aptos Black (self-hosted). */
-
-@font-face {
-  font-family: "Aptos Black";
-  src: url("/fonts/aptos-black.woff2") format("woff2");
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
+   One typeface everywhere: Oswald — condensed & energetic, echoing the galloping-horse logo. */
 
 :root {
   --paper: #f3efe6;
@@ -20,11 +12,11 @@
   --line: rgba(19, 17, 16, 0.16);
   --line-strong: rgba(19, 17, 16, 0.42);
 
-  /* Aptos Black everywhere — titles, body, numbers, data. No other typeface. */
-  --display: "Aptos Black", system-ui, sans-serif;
-  --serif: "Aptos Black", system-ui, sans-serif;
-  --sans: "Aptos Black", system-ui, sans-serif;
-  --mono: "Aptos Black", ui-monospace, monospace;
+  /* Oswald everywhere — titles, body, numbers, data. No other typeface. */
+  --display: "Oswald", system-ui, sans-serif;
+  --serif: "Oswald", system-ui, sans-serif;
+  --sans: "Oswald", system-ui, sans-serif;
+  --mono: "Oswald", ui-monospace, monospace;
   --header-h: 66px;
 }
 
