@@ -109,7 +109,8 @@ section.band { padding: 90px 0; border-bottom: 1px solid var(--line); }
 .landing .landing-title { font-family: var(--serif); font-weight: 400; color: var(--red); margin: 0; font-size: clamp(3.4rem, 8vw, 6.4rem); line-height: 0.92; letter-spacing: -0.01em; }
 .landing .landing-slogan { font-family: var(--serif); font-style: italic; font-weight: 400; margin: 0; font-size: clamp(1.35rem, 2.3vw, 1.95rem); line-height: 1.25; color: var(--red-2); max-width: 30ch; }
 .landing .ctas { display: flex; gap: 14px; flex-wrap: wrap; }
-.landing .btn { background: var(--red); color: #fff; }
+/* CTAs in the title's editorial serif (not the mono of other buttons) */
+.landing .btn { background: var(--red); color: #fff; font-family: var(--serif); font-weight: 400; font-size: 1.25rem; letter-spacing: 0; text-transform: none; padding: 11px 26px; }
 .landing .btn:hover { background: var(--red-2); color: #fff; }
 .landing .btn.ghost { background: transparent; color: var(--red); border: 1px solid var(--red); }
 .landing .btn.ghost:hover { background: var(--red); color: #fff; }
