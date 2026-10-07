@@ -92,8 +92,6 @@ export default function AppPage() {
     <section className="app-shell">
       <LoaderOverlay hidden={!busy} label={busy || "Working"} />
       <div className="wrap mixwrap">
-        <p className="kicker center"><span className="dot" /> Privacy pool · Solana devnet</p>
-
         <div className="swapcard">
           <div className="seg">
             <button className={mode === "deposit" ? "active" : ""} onClick={() => { setMode("deposit"); setLog(null); }}>Mix in</button>
