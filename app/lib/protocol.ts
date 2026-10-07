@@ -4,7 +4,7 @@
 // what the CRE keeper writes on-chain, so the proof's roots verify.
 
 import { AnchorProvider, Program, BN, EventParser, BorshCoder, type Idl } from "@coral-xyz/anchor";
-import { Connection, PublicKey, SystemProgram, Keypair, Transaction } from "@solana/web3.js";
+import { Connection, PublicKey, SystemProgram, Keypair, Transaction, ComputeBudgetProgram } from "@solana/web3.js";
 import { buildPoseidon } from "circomlibjs";
 import idl from "./idl/sieve.json";
 import { prove, recipientField, type FormattedProof } from "./prover";
@@ -36,6 +36,9 @@ export function getProgram(connection: Connection, wallet: any): Program {
 let _p: any = null;
 async function P() { if (!_p) _p = await buildPoseidon(); return _p; }
 const feToBytes = (x: bigint) => { const h = x.toString(16).padStart(64, "0"); return (h.match(/.{2}/g) as string[]).map((b) => parseInt(b, 16)); };
+// Poseidon Merkle insert (deposit) and Groth16 verify (withdraw/ragequit) blow past the 200k
+// default compute budget — bump it (matches scripts/demo.ts).
+const cu = () => ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 });
 
 class MerkleTree {
   private constructor(public leaves: bigint[], private zeros: bigint[], private p: any) {}
@@ -169,6 +172,7 @@ export async function depositBatch(
     const c = feToBytes(await noteCommitment(notes[k]));
     const tx = await program.methods.deposit(c)
       .accounts({ pool: pool(), depositRecord: depositRecordPda(base + k), vault: vault(), depositor: wallet, systemProgram: SystemProgram.programId })
+      .preInstructions([cu()])
       .transaction();
     tx.feePayer = wallet;
     tx.recentBlockhash = blockhash;
@@ -178,8 +182,9 @@ export async function depositBatch(
   const signed = await signAll(txs); // single approval in the wallet
   const sigs: string[] = [];
   for (let k = 0; k < signed.length; k++) {
-    const sig = await connection.sendRawTransaction(signed[k].serialize());
-    await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
+    const sig = await connection.sendRawTransaction(signed[k].serialize(), { maxRetries: 5 });
+    const conf = await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
+    if (conf.value.err) throw new Error(`deposit ${k + 1}/${signed.length} failed on-chain: ${JSON.stringify(conf.value.err)}`);
     sigs.push(sig);
     onProgress?.(k + 1, signed.length, sig);
   }
@@ -205,6 +210,7 @@ export async function withdraw(program: Program, wallet: PublicKey, proof: Forma
   const [rootDeposits, rootAsp, nullifierHash, recipientField] = proof.publicSignals;
   return program.methods.withdraw({ proofA: proof.proofA, proofB: proof.proofB, proofC: proof.proofC, rootDeposits, rootAsp, nullifierHash, recipientField, auditorCt })
     .accounts({ pool: pool(), nullifierRecord: nullifierPda(nullifierHash), vault: vault(), recipient, payer: wallet, systemProgram: SystemProgram.programId })
+    .preInstructions([cu()])
     .rpc();
 }
 
@@ -242,6 +248,7 @@ export async function ragequit(program: Program, wallet: PublicKey, r: { proof: 
   const [rootDeposits, nullifierHash] = r.proof.publicSignals;
   return program.methods.ragequit({ proofA: r.proof.proofA, proofB: r.proof.proofB, proofC: r.proof.proofC, rootDeposits, nullifierHash, leafIndex: new BN(r.leafIndex) })
     .accounts({ pool: pool(), nullifierRecord: nullifierPda(nullifierHash), depositRecord: depositRecordPda(r.leafIndex), vault: vault(), originalDepositor: r.depositor, payer: wallet, systemProgram: SystemProgram.programId })
+    .preInstructions([cu()])
     .rpc();
 }
 
