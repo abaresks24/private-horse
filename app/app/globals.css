@@ -226,7 +226,7 @@ footer.site { padding: 36px 28px 80px; color: var(--taupe); font-family: var(--m
 .kicker .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); display: inline-block; }
 .kicker.center { justify-content: center; }
 
-.swapcard { background: #fff; border: 1px solid var(--line-strong); padding: 22px; box-shadow: 0 18px 54px rgba(19,17,16,0.07); }
+.swapcard { background: #fff; border: 1px solid var(--line-strong); padding: 22px; box-shadow: 0 18px 54px rgba(19,17,16,0.07); min-height: 392px; display: flex; flex-direction: column; }
 .seg { display: flex; gap: 4px; background: var(--paper-2); padding: 4px; margin-bottom: 18px; }
 .seg button { flex: 1; font-family: var(--serif); font-size: 1.2rem; padding: 10px; background: none; border: 0; cursor: pointer; color: var(--taupe); transition: color 0.12s, background 0.12s; }
 .seg button.active { background: #fff; color: var(--red); box-shadow: 0 1px 3px rgba(19,17,16,0.1); }

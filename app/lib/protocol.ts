@@ -216,15 +216,18 @@ export async function fetchWithdrawals(connection: Connection, limit = 40): Prom
   const sigs = await connection.getSignaturesForAddress(PROGRAM_ID, { limit });
   const rows: AuditRow[] = [];
   for (const { signature } of sigs) {
-    const txr = await connection.getTransaction(signature, { maxSupportedTransactionVersion: 0 });
-    const logs = txr?.meta?.logMessages;
-    if (!logs) continue;
-    for (const ev of parser.parseLogs(logs)) {
-      if (ev.name === "withdrawEvent" || ev.name === "WithdrawEvent") {
-        const ct = (ev.data.auditorCt as any[]).map((a) => bytesToFe(Array.from(a as number[])));
+    try {
+      const txr = await connection.getTransaction(signature, { maxSupportedTransactionVersion: 0 });
+      const logs = txr?.meta?.logMessages;
+      if (!logs) continue;
+      for (const ev of parser.parseLogs(logs)) {
+        const isWithdraw = ev.name === "withdrawEvent" || ev.name === "WithdrawEvent";
+        const raw = ev.data?.auditorCt as any[] | undefined;
+        if (!isWithdraw || !Array.isArray(raw) || !ev.data?.recipient) continue;
+        const ct = raw.map((a) => bytesToFe(Array.from(a as number[])));
         rows.push({ sig: signature, recipient: (ev.data.recipient as PublicKey).toBase58(), auditorCt: ct });
       }
-    }
+    } catch { /* skip txs whose logs can't be parsed (deploys, unrelated events, etc.) */ }
   }
   return rows;
 }
