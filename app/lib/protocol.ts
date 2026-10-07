@@ -225,7 +225,8 @@ export async function fetchWithdrawals(connection: Connection, limit = 40): Prom
       if (!logs) continue;
       for (const ev of parser.parseLogs(logs)) {
         const isWithdraw = ev.name === "withdrawEvent" || ev.name === "WithdrawEvent";
-        const raw = ev.data?.auditorCt as any[] | undefined;
+        // Anchor 0.30 IDL emits event fields in snake_case (auditor_ct); keep camelCase fallback.
+        const raw = (ev.data?.auditor_ct ?? ev.data?.auditorCt) as any[] | undefined;
         if (!isWithdraw || !Array.isArray(raw) || !ev.data?.recipient) continue;
         const ct = raw.map((a) => bytesToFe(Array.from(a as number[])));
         rows.push({ sig: signature, recipient: (ev.data.recipient as PublicKey).toBase58(), auditorCt: ct });
