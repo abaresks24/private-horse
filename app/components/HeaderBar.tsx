@@ -4,10 +4,23 @@ import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import HorseMark from "./HorseMark";
 
-const WalletMultiButton = dynamic(
-  () => import("@solana/wallet-adapter-react-ui").then((m) => m.WalletMultiButton),
+// BaseWalletMultiButton lets us relabel the default "Select Wallet" -> "Connect Wallet".
+const BaseWalletMultiButton = dynamic(
+  () => import("@solana/wallet-adapter-react-ui").then((m) => m.BaseWalletMultiButton),
   { ssr: false }
 );
+
+const WALLET_LABELS = {
+  "change-wallet": "Change wallet",
+  connecting: "Connecting…",
+  "copy-address": "Copy address",
+  copied: "Copied",
+  disconnect: "Disconnect",
+  "has-wallet": "Connect Wallet",
+  "no-wallet": "Connect Wallet",
+} as const;
+
+const WalletMultiButton = () => <BaseWalletMultiButton labels={WALLET_LABELS} />;
 
 const EXPLORER = "https://explorer.solana.com/address/4R4FwpZK1Tj9wAFnyfx17bDTa14hKEoLc5dhjsHhtA1X?cluster=devnet";
 
