@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import HorseMark from "./HorseMark";
 
@@ -23,33 +24,32 @@ const WALLET_LABELS = {
 const WalletMultiButton = () => <BaseWalletMultiButton labels={WALLET_LABELS} />;
 
 export default function HeaderBar() {
-  const landing = usePathname() === "/";
+  const path = usePathname();
 
   // Landing: no bar — just the dark logo top-left and connect-wallet top-right, on beige paper.
-  if (landing) {
+  if (path === "/") {
     return (
       <header className="site landing-head">
-        <a href="/" className="brand">
+        <Link href="/" className="brand">
           <HorseMark size={26} src="/logo.png" />
           <span>Private&nbsp;Horse</span>
-        </a>
+        </Link>
         <div className="wallet-slot"><WalletMultiButton /></div>
       </header>
     );
   }
 
-  const path = usePathname();
   const cls = (p: string) => (path === p ? "active" : "");
   return (
     <header className="site">
-      <a href="/" className="brand">
+      <Link href="/" className="brand">
         <HorseMark size={26} />
         <span>Private&nbsp;Horse</span>
-      </a>
+      </Link>
       <nav className="sectiontabs">
-        <a href="/app" className={cls("/app")}>Horse</a>
-        <a href="/auditor" className={cls("/auditor")}>Auditor&nbsp;key</a>
-        <a href="/docs" className={cls("/docs")}>Docs</a>
+        <Link href="/app" className={cls("/app")}>Horse</Link>
+        <Link href="/auditor" className={cls("/auditor")}>Auditor&nbsp;key</Link>
+        <Link href="/docs" className={cls("/docs")}>Docs</Link>
       </nav>
       <div className="wallet-slot"><WalletMultiButton /></div>
     </header>

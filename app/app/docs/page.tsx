@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export const metadata = { title: "Private Horse — docs" };
 
 const PROGRAM = "4R4FwpZK1Tj9wAFnyfx17bDTa14hKEoLc5dhjsHhtA1X";
@@ -240,7 +242,7 @@ export default function Docs() {
             <li>Program (Solana devnet): <code>{PROGRAM}</code> —{" "}
               <a href={`https://explorer.solana.com/address/${PROGRAM}?cluster=devnet`} target="_blank" rel="noreferrer">Explorer ↗</a></li>
             <li>Source: <a href="https://github.com/abaresks24/private-horse" target="_blank" rel="noreferrer">github.com/abaresks24/private-horse ↗</a></li>
-            <li>Try it: <a href="/app">the app →</a></li>
+            <li>Try it: <Link href="/app">the app →</Link></li>
           </ul>
         </article>
       </div>
