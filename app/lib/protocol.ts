@@ -4,7 +4,7 @@
 // what the CRE keeper writes on-chain, so the proof's roots verify.
 
 import { AnchorProvider, Program, BN, EventParser, BorshCoder, type Idl } from "@coral-xyz/anchor";
-import { Connection, PublicKey, SystemProgram, Keypair } from "@solana/web3.js";
+import { Connection, PublicKey, SystemProgram, Keypair, Transaction } from "@solana/web3.js";
 import { buildPoseidon } from "circomlibjs";
 import idl from "./idl/sieve.json";
 import { prove, recipientField, type FormattedProof } from "./prover";
@@ -144,6 +144,61 @@ export async function deposit(program: Program, wallet: PublicKey, note: Note) {
   return program.methods.deposit(c)
     .accounts({ pool: pool(), depositRecord: depositRecordPda(idx), vault: vault(), depositor: wallet, systemProgram: SystemProgram.programId })
     .rpc();
+}
+
+/**
+ * Mix flow: ONE wallet signature → N fixed-denomination deposit txs.
+ * Builds all N deposits against sequential leaf indices, signs them in a single wallet approval
+ * (signAllTransactions), then broadcasts sequentially (each confirmed so the on-chain nextIndex
+ * matches the precomputed depositRecord PDAs). Returns the signatures in order.
+ */
+export async function depositBatch(
+  program: Program,
+  connection: Connection,
+  wallet: PublicKey,
+  signAll: (txs: Transaction[]) => Promise<Transaction[]>,
+  notes: Note[],
+  onProgress?: (done: number, total: number, sig: string) => void,
+): Promise<string[]> {
+  const poolAcc: any = await (program.account as any).pool.fetch(pool());
+  const base = poolAcc.nextIndex.toNumber();
+  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+
+  const txs: Transaction[] = [];
+  for (let k = 0; k < notes.length; k++) {
+    const c = feToBytes(await noteCommitment(notes[k]));
+    const tx = await program.methods.deposit(c)
+      .accounts({ pool: pool(), depositRecord: depositRecordPda(base + k), vault: vault(), depositor: wallet, systemProgram: SystemProgram.programId })
+      .transaction();
+    tx.feePayer = wallet;
+    tx.recentBlockhash = blockhash;
+    txs.push(tx);
+  }
+
+  const signed = await signAll(txs); // single approval in the wallet
+  const sigs: string[] = [];
+  for (let k = 0; k < signed.length; k++) {
+    const sig = await connection.sendRawTransaction(signed[k].serialize());
+    await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
+    sigs.push(sig);
+    onProgress?.(k + 1, signed.length, sig);
+  }
+  return sigs;
+}
+
+/** Advisory provenance pre-check on the depositor's own wallet: how many sources trace it clean. */
+export async function provenanceCheck(address: string): Promise<{ up: boolean; votes: number; total: number; quorum: number }> {
+  const total = SOURCES.length;
+  try {
+    const results = await Promise.all(SOURCES.map((s) =>
+      fetch(`${MOCK_URL}/${s}?address=${address}`).then((r) => r.json()).then((j) => !!j.clean).catch(() => null)
+    ));
+    if (results.every((r) => r === null)) return { up: false, votes: 0, total, quorum: QUORUM };
+    const votes = results.filter((r) => r === true).length;
+    return { up: true, votes, total, quorum: QUORUM };
+  } catch {
+    return { up: false, votes: 0, total, quorum: QUORUM };
+  }
 }
 
 export async function withdraw(program: Program, wallet: PublicKey, proof: FormattedProof, recipient: PublicKey, auditorCt: number[][] = ZERO_CT) {
